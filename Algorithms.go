@@ -3,6 +3,7 @@ package algorithms
 import (
 	"container/heap"
 	"math"
+	"sort"
 	"strings"
 )
 
@@ -180,4 +181,280 @@ func (h *IHeap) Pop() interface{} {
 	x := old[n-1]
 	*h = old[0 : n-1]
 	return x
+}
+
+/***** 两数之和 *****/
+func twoSum(nums []int, target int) []int {
+	left, right := 0, len(nums) - 1
+	indexs := make([]int, len(nums))
+	for i, _ := range indexs {
+		indexs[i] = i
+	}
+	sort.Slice(indexs, func(i, j int) bool {
+		return nums[indexs[i]] < nums[indexs[j]]
+	})
+	for left < right {
+		sum := nums[indexs[left]] + nums[indexs[right]]
+		if sum == target {
+			return []int{indexs[left], indexs[right]}
+		} else if sum < target {
+			left++
+		} else {
+			right--
+		}
+	}
+	return nil
+}
+
+func twoSum2(nums []int, target int) []int {
+	hashTable := map[int]int{}
+	// map存储，挨着找
+	for i, x := range nums {
+		if p, ok := hashTable[target-x]; ok {
+			return []int{p, i}
+		}
+		hashTable[x] = i
+	}
+	return nil
+}
+
+/***** 无重复字符的最长子串 *****/
+// 类型: 滑动窗口
+func lengthOfLongestSubstring(s string) int {
+	if len(s) == 0 {
+		return 0
+	}
+	bitmap := make(map[uint8]int)
+	// bitmap存储字符最后出现的位置，用于判断是否重复
+	maxLen := 1
+	dp := make([]int, len(s))
+	// dp记录的是当前窗口的大小
+	dp[0] = 1
+	bitmap[s[0]] = 0
+	for i := 1; i < len(s); i++ {
+		if v, ok := bitmap[s[i]]; ok && v >= i - dp[i-1] {
+			// 该字符在当前窗口曾经出现过
+			dp[i] = i - v
+		} else {
+			dp[i] = dp[i-1] + 1
+			if dp[i] > maxLen {
+				maxLen = dp[i]
+			}
+		}
+		bitmap[s[i]] = i
+	}
+	return maxLen
+}
+
+/***** 最长回文子串 *****/
+// 中心扩展算法
+func longestPalindrome(s string) string {
+	if s == "" {
+		return ""
+	}
+	start, end := 0, 0
+	for i := 0; i < len(s); i++ {
+		left1, right1 := expandAroundCenter(s, i, i)
+		left2, right2 := expandAroundCenter(s, i, i + 1)
+		if right1 - left1 > end - start {
+			start, end = left1, right1
+		}
+		if right2 - left2 > end - start {
+			start, end = left2, right2
+		}
+	}
+	return s[start:end+1]
+}
+
+func expandAroundCenter(s string, left, right int) (int, int) {
+	for ; left >= 0 && right < len(s) && s[left] == s[right]; left, right = left-1 , right+1 { }
+	return left + 1, right - 1
+}
+
+type ListNode struct {
+    Val int
+    Next *ListNode
+}
+/***** 反转链表 *****/
+func reverseList(head *ListNode) *ListNode {
+	var root *ListNode
+	var tmp *ListNode
+
+	for head != nil {
+		tmp = head.Next
+		head.Next = root
+		root = head
+		head = tmp
+	}
+
+	return root
+}
+
+/***** 全排列 *****/
+func permute(nums []int) [][]int {
+	length := len(nums)
+	var res [][]int
+	if length == 0 {
+		return res
+	}
+
+	var path []int
+	used := make([]bool, length)
+	dfs(nums, length, 0, path, used, &res)
+	return res
+}
+
+func dfs(nums []int, length int, depth int, path []int, used []bool, res *[][]int){
+	if  depth == length {
+		p := make([]int, length)
+		copy(p, path)  // 注意使用copy
+		*res = append(*res, p)
+		return
+	}
+
+	for i := 0; i < length; i++ {
+		if used[i]{
+			continue
+		}
+		path = append(path, nums[i])
+		used[i] = true
+		dfs(nums, length, depth + 1, path, used, res)
+		path = path[:len(path) - 1]
+		used[i] = false
+	}
+}
+
+/***** 跳跃游戏 II *****/
+// 给定一个非负整数数组，你最初位于数组的第一个位置。
+// 数组中的每个元素代表你在该位置可以跳跃的最大长度。
+// 你的目标是使用最少的跳跃次数到达数组的最后一个位置。
+// 假设你总是可以到达数组的最后一个位置。
+func jump(nums []int) int {
+	length := len(nums)
+	end := 0
+	maxPosition := 0
+	steps := 0
+	for i := 0; i < length - 1; i++ {
+		maxPosition = max(maxPosition, i + nums[i])
+		// 当前可到达最远位置
+		if i == end {
+			// 已经到达可走的最远位置
+			end = maxPosition
+			steps++
+		}
+	}
+	return steps
+}
+
+/***** 三数之和 *****/
+// 给你一个包含 n 个整数的数组 nums，判断 nums 中是否存在三个元素 a，b，c ，
+// 使得 a + b + c = 0 ？请你找出所有和为 0 且不重复的三元组。
+func threeSum(nums []int) [][]int {
+	if len(nums) < 3 {
+		return [][]int{}
+	}
+
+	sort.Ints(nums)
+	var res [][]int
+
+	var ptrLeft, ptrRight int
+	for k, _ := range nums {
+		switch {
+		case nums[k] > 0:
+			return res
+		case k > 0 && nums[k-1] == nums[k]:
+			continue
+		default:
+			ptrLeft = k + 1
+			ptrRight = len(nums) - 1
+			for ptrLeft < ptrRight {
+				sum := nums[k] + nums[ptrLeft] + nums[ptrRight]
+				if sum == 0 {
+					r := []int {nums[k], nums[ptrLeft], nums[ptrRight]}
+					res = append(res, r)
+					for ptrLeft < ptrRight && nums[ptrLeft] == nums[ptrLeft + 1]{
+						ptrLeft += 1
+					}
+					for ptrLeft < ptrRight && nums[ptrRight] == nums[ptrRight - 1]{
+						ptrRight -= 1
+					}
+				}
+
+				if sum > 0 {
+					ptrRight -= 1
+				} else {
+					ptrLeft += 1
+				}
+			}
+		}
+	}
+	return res
+}
+
+/***** 爬楼梯 *****/
+//每次你可以爬 1 或 2 个台阶。你有多少种不同的方法可以爬到楼顶呢？
+func climbStairs(n int) int {
+	switch n {
+	case 0,1:
+		return 1
+	default:
+		tmp := []int{1, 1}
+		res := 0
+		for i := 2; i <= n; i++ {
+			res = tmp[0] + tmp[1]
+			tmp[0], tmp[1] = tmp[1], res
+		}
+		return res
+	}
+}
+
+/***** 重排链表 *****/
+//给定一个单链表 L：L0→L1→…→Ln-1→Ln ，
+//将其重新排列后变为： L0→Ln→L1→Ln-1→L2→Ln-2→…
+//你不能只是单纯的改变节点内部的值，而是需要实际的进行节点交换。
+func reorderList(head *ListNode)  {
+	if head == nil {
+		return
+	}
+	length := 0
+
+	p := head
+
+	for p != nil {
+		length += 1
+		p = p.Next
+	}
+	p = head
+	for i := 1; i < (length+1) / 2; i++ {
+		p = p.Next
+	}
+
+	head2 := p.Next
+	p.Next = nil
+
+	head2 = reverse(head2)
+
+	p = head
+
+	var tmp *ListNode
+	for p != nil && head2 != nil {
+		tmp = p.Next
+		p.Next = head2
+		head2 = head2.Next
+		p = p.Next
+		p.Next = tmp
+		p = p.Next
+	}
+}
+
+func reverse(head *ListNode) *ListNode{
+	var tmp *ListNode
+	var root *ListNode
+	for head != nil {
+		tmp = head.Next
+		head.Next = root
+		root = head
+		head = tmp
+	}
+	return root
 }
