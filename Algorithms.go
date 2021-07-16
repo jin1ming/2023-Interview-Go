@@ -8,7 +8,6 @@ import (
 )
 
 /***** 字符串转换整数 (atoi) *****/
-
 func myAtoi(str string) int {
 	return convert(clean(str))
 }
@@ -87,7 +86,6 @@ func quickMul(x float64, n int) float64 {
 }
 
 /***** 柱状图中的最大矩形 *****/
-
 func largestRectangleArea(heights []int) int {
 	// 首尾添加负数高度，这样原本的第一个高度能形成升序，原本的最后一个高度也能得到处理
 	heights = append([]int{-2}, heights...)
@@ -116,14 +114,12 @@ func max(a,b int)int{
 	return b
 }
 
-/***** 单词拆分
- * 给定一个非空字符串 s 和一个包含非空单词的列表 wordDict，
- * 判定 s 是否可以被空格拆分为一个或多个在字典中出现的单词。
- * 说明：
- * 拆分时可以重复使用字典中的单词。
- * 你可以假设字典中没有重复的单词。
- */
-
+/***** 单词拆分  *****/
+// 给定一个非空字符串 s 和一个包含非空单词的列表 wordDict，
+// 判定 s 是否可以被空格拆分为一个或多个在字典中出现的单词。
+// 说明：
+// 拆分时可以重复使用字典中的单词。
+// 你可以假设字典中没有重复的单词。
 func wordBreak(s string, wordDict []string) bool {
 	wordDictSet := make(map[string]bool)
 	for _, w := range wordDict {
@@ -144,7 +140,6 @@ func wordBreak(s string, wordDict []string) bool {
 
 
 /***** 前K个高频元素 *****/
-
 func topKFrequent(nums []int, k int) []int {
 	occurrences := map[int]int{}
 	for _, num := range nums {
@@ -286,7 +281,6 @@ func reverseList(head *ListNode) *ListNode {
 		root = head
 		head = tmp
 	}
-
 	return root
 }
 
@@ -555,4 +549,72 @@ func myReverse(head, tail *ListNode) (*ListNode, *ListNode) {
 		p = nex
 	}
 	return tail, head
+}
+
+/***** 数组中的逆序对 *****/
+// 在数组中的两个数字，如果前面一个数字大于后面的数字，则这两个数字组成一个逆序对。
+// 输入一个数组，求出这个数组中的逆序对的总数。
+// 分解： 待排序的区间为 [l,r]，令 m = (l+r) / 2,
+//       我们把 [l,r] 分成 [l,m] 和 [m+1,r]
+// 解决： 使用归并排序递归地排序两个子序列
+// 合并： 把两个已经排好序的子序列 [l,m] 和 [m+1,r] 合并起来
+func reversePairs(nums []int) int {
+	return mergeSort(nums, 0, len(nums)-1)
+}
+
+func mergeSort(nums []int, start, end int) int {
+	if start >= end {
+		return 0
+	}
+	mid := start + (end - start)/2 // 防止start和end相加引起的数组越界
+	cnt := mergeSort(nums, start, mid) + mergeSort(nums, mid + 1, end)
+	// 左右分别是排好序的数组
+	// cnt 是返回的逆序对的数量
+	var tmp []int
+	i, j := start, mid + 1
+	// i是左边数组的指针，j是右边数组的指针
+	for i <= mid && j <= end { // 加判断防止越界
+		if nums[i] <= nums[j] {
+			tmp = append(tmp, nums[i]) // 将最小的元素放入tmp
+			cnt += j - (mid + 1)
+			// 当前右边数组被存入 tmp 的数量就是右边有几个元素小于左边数组的当前元素
+			i++
+		} else {
+			tmp = append(tmp, nums[j]) // 将最小的元素放入tmp
+			j++
+		}
+	}
+	// 将左边数组剩余的加入
+	for ; i <= mid; i++ {
+		tmp = append(tmp, nums[i])
+		cnt += end - (mid + 1) + 1
+		// 右边数组全部被存入 tmp, 说明左边数组剩余元素都比右边数组中所有元素要大
+	}
+	// 将右边数组剩余的加入
+	for ; j <= end; j++ {
+		tmp = append(tmp, nums[j])
+	}
+	// 将排好序的 tmp 拷贝到当前数组片段中
+	for i = start; i <= end; i++ {
+		nums[i] = tmp[i - start]
+	}
+	return cnt
+}
+
+/***** 连续子数组的最大和 *****/
+// 输入一个整型数组，数组中的一个或连续多个整数组成一个子数组。
+// 求所有子数组的和的最大值。
+func maxSubArray(nums []int) int {
+	res := -101
+	sum := 0
+	for _, k := range nums {
+		if sum < 0{
+			sum = 0
+		}
+		sum += k
+		if sum > res {
+			res = sum
+		}
+	}
+	return res
 }
