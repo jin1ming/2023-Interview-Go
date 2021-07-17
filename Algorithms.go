@@ -294,11 +294,11 @@ func permute(nums []int) [][]int {
 
 	var path []int
 	used := make([]bool, length)
-	dfs(nums, length, 0, path, used, &res)
+	dfs1(nums, length, 0, path, used, &res)
 	return res
 }
 
-func dfs(nums []int, length int, depth int, path []int, used []bool, res *[][]int){
+func dfs1(nums []int, length int, depth int, path []int, used []bool, res *[][]int){
 	if  depth == length {
 		p := make([]int, length)
 		copy(p, path)  // 注意使用copy
@@ -312,7 +312,7 @@ func dfs(nums []int, length int, depth int, path []int, used []bool, res *[][]in
 		}
 		path = append(path, nums[i])
 		used[i] = true
-		dfs(nums, length, depth + 1, path, used, res)
+		dfs1(nums, length, depth + 1, path, used, res)
 		path = path[:len(path) - 1]
 		used[i] = false
 	}
@@ -616,5 +616,374 @@ func maxSubArray(nums []int) int {
 			res = sum
 		}
 	}
+	return res
+}
+
+type TreeNode struct {
+    Val int
+    Left *TreeNode
+    Right *TreeNode
+}
+/***** 从前序与中序遍历序列构造二叉树 *****/
+// 给定一棵树的前序遍历 preorder 与中序遍历 inorder。
+// 请构造二叉树并返回其根节点。
+func buildTree(preorder []int, inorder []int) *TreeNode {
+	if len(preorder) == 0 {
+		return nil
+	}
+
+	i := 0
+	for inorder[i] != preorder[0] {
+		i++
+	}
+
+	left := buildTree(preorder[1:i+1], inorder[:i])
+	right := buildTree(preorder[i+1:], inorder[i+1:])
+
+	return &TreeNode{Val: preorder[0], Left: left, Right: right}
+}
+
+/***** 反转链表 II *****/
+// 给你单链表的头指针 head 和两个整数 left 和 right ，其中 left <= right。
+// 请你反转从位置 left 到位置 right 的链表节点，返回 反转后的链表 。
+func reverseBetween(head *ListNode, left int, right int) *ListNode {
+	if head == nil || left <= 0 || left >= right{
+		return head
+	}
+	ps := head
+	m := 2
+	for m < left {
+		m++
+		ps = ps.Next
+	}
+
+	var tmp, head2, q *ListNode
+	if left == 1 {
+		q = ps
+		m--
+	} else {
+		q = ps.Next
+	}
+	tail := q
+
+	for m = m - 1; m < right && q != nil; m++ {
+		tmp = q.Next
+		q.Next = head2
+		head2 = q
+		q = tmp
+	}
+
+	if tail != nil {
+		tail.Next = q
+	}
+	if left == 1 {
+		return head2
+	}
+	ps.Next = head2
+	return head
+}
+
+/***** 编辑距离 *****/
+// 给你两个单词 word1 和 word2，请你计算出将 word1 转换成 word2 所使用的最少操作数。
+// 你可以对一个单词进行如下三种操作：
+// 插入一个字符
+// 删除一个字符
+// 替换一个字符
+func minDistance(word1 string, word2 string) int {
+	if len(word1) * len(word2) == 0 {
+		return len(word1) + len(word2)
+	}
+	dp := make([][]int, len(word1))
+	// dp[i][j] 代表 word1 到 i 位置转换成 word2 到 j 位置需要最少步数
+	var i, j int
+	// 初始化边界
+	// j 为 0 时，转化成到 i 的步数为 i
+	for i = 0; i < len(word1)+1; i++ {
+		dp[i] = make([]int, len(word2)+1)
+		dp[i][0] = i
+	}
+	// i 为 0 时，转化成到 j 的步数为 j
+	for j = 0; j < len(word2)+1; j++ {
+		dp[0][j] = j
+	}
+	for i = 1; i < len(word1)+1; i++ {
+		for j = 1; j < len(word2)+1; j++ {
+			if word1[i-1] != word2[j-1] {
+				// 当前字符不一致，就对 dp 值加一
+				dp[i-1][j-1] += 1
+			}
+			dp[i][j] = tMin(dp[i-1][j-1], dp[i-1][j]+1, dp[i][j-1]+1)
+			// dp[i-1][j-1] 表示替换操作，
+			// dp[i-1][j] 表示删除操作，
+			// dp[i][j-1] 表示插入操作。
+		}
+	}
+	return dp[i-1][j-1]
+}
+
+func tMin(a, b, c int) int {
+	min := a
+	if b < min {
+		min = b
+	}
+	if c < min {
+		return c
+	} else {
+		return min
+	}
+}
+
+/***** 链表中倒数第k个节点 *****/
+func getKthFromEnd(head *ListNode, k int) *ListNode {
+	slow, fast := head, head
+	for k > 0 && fast != nil {
+		fast = fast.Next
+		k--
+	}
+	for fast != nil {
+		fast = fast.Next
+		slow = slow.Next
+	}
+	return slow
+}
+
+/***** 链表中倒数第k个节点 *****/
+// 给你一个由 '1'（陆地）和 '0'（水）组成的的二维网格，请你计算网格中岛屿的数量。
+// 岛屿总是被水包围，并且每座岛屿只能由水平方向和/或竖直方向上相邻的陆地连接形成。
+// 此外，你可以假设该网格的四条边均被水包围。
+func numIslands(grid [][]byte) int {
+	row := len(grid)
+	if row == 0 {
+		return 0
+	}
+	col := len(grid[0])
+	num := 0
+
+	for r := 0; r < row; r++ {
+		for c := 0; c < col; c++ {
+			if grid[r][c] == '1' {
+				// 找到一个陆地
+				num++
+				dfs2(grid, r, c) // 让该陆地变成水
+			}
+		}
+	}
+	return num
+}
+
+func dfs2(grid [][]byte, r int, c int)  {
+	row := len(grid)
+	col := len(grid[0])
+
+	grid[r][c] = '0'
+
+	if r - 1 >= 0 && grid[r-1][c] == '1' {
+		dfs2(grid, r-1, c)
+	}
+	if r + 1 < row && grid[r+1][c] == '1' {
+		dfs2(grid, r+1, c)
+	}
+	if c - 1 >= 0 && grid[r][c-1] == '1' {
+		dfs2(grid, r, c-1)
+	}
+	if c + 1 < col && grid[r][c+1] == '1' {
+		dfs2(grid, r, c+1)
+	}
+}
+
+/***** 螺旋矩阵 *****/
+// 给你一个 m 行 n 列的矩阵 matrix ，
+// 请按照 顺时针螺旋顺序 ，返回矩阵中的所有元素。
+func spiralOrder(matrix [][]int) []int {
+	var res []int
+	top, bottom, left, right := 0, len(matrix)-1, 0, len(matrix[0])-1
+	for top <= bottom && left <= right {
+		// 往右走
+		for i := left; i <= right; i++ {
+			res = append(res, matrix[top][i])
+		}
+		// 上边距+1（因为再也不会走这行了）
+		top++
+		// 往下走
+		for i := top; i <= bottom; i++ {
+			res = append(res, matrix[i][right])
+		}
+		// 右边距-1
+		right--
+		// 判断是否到达终点
+		// 放最后可能出现越界
+		if top > bottom || right < left {
+			break
+		}
+		// 向左走
+		for i := right; i >= left; i-- {
+			res = append(res, matrix[bottom][i])
+		}
+		// 下边距-1
+		bottom--
+		// 向上走
+		for i := bottom; i >= top; i-- {
+			res = append(res, matrix[i][left])
+		}
+		// 左边距+1
+		left++
+	}
+	return res
+}
+
+/***** 每日温度 *****/
+// 请根据每日 气温 列表 temperatures ，请计算在每一天需要等几天才会有更高的温度。
+// 如果气温在这之后都不会升高，请在该位置用 0 来代替。
+func dailyTemperatures(T []int) []int {
+	res := make([]int, len(T))
+	var stack []int
+	for i, v := range T {
+		for len(stack) != 0 && v > T[stack[len(stack)-1]] {
+			t := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			res[t] = i - t
+		}
+		stack = append(stack, i)
+	}
+	return res
+}
+
+
+type LRUCache struct {
+	size int
+	capacity int
+	cache map[int]*DLinkedNode
+	head, tail *DLinkedNode
+}
+
+type DLinkedNode struct {
+	key, value int
+	prev, next *DLinkedNode
+}
+
+func initDLinkedNode(key, value int) *DLinkedNode {
+	return &DLinkedNode{
+		key: key,
+		value: value,
+	}
+}
+
+// Constructor /***** LRU 缓存 *****/
+func Constructor(capacity int) LRUCache {
+	l := LRUCache{
+		cache: map[int]*DLinkedNode{},
+		head: initDLinkedNode(0, 0),
+		tail: initDLinkedNode(0, 0),
+		capacity: capacity,
+	}
+	l.head.next = l.tail
+	l.tail.prev = l.head
+	return l
+}
+
+func (this *LRUCache) Get(key int) int {
+	if _, ok := this.cache[key]; !ok {
+		return -1
+	}
+	node := this.cache[key]
+	this.moveToHead(node)
+	return node.value
+}
+
+
+func (this *LRUCache) Put(key int, value int)  {
+	if _, ok := this.cache[key]; !ok {
+		node := initDLinkedNode(key, value)
+		this.cache[key] = node
+		this.addToHead(node)
+		this.size++
+		if this.size > this.capacity {
+			removed := this.removeTail()
+			delete(this.cache, removed.key)
+			this.size--
+		}
+	} else {
+		node := this.cache[key]
+		node.value = value
+		this.moveToHead(node)
+	}
+}
+
+func (this *LRUCache) addToHead(node *DLinkedNode) {
+	node.prev = this.head
+	node.next = this.head.next
+	this.head.next.prev = node
+	this.head.next = node
+}
+
+func (this *LRUCache) removeNode(node *DLinkedNode) {
+	node.prev.next = node.next
+	node.next.prev = node.prev
+}
+
+func (this *LRUCache) moveToHead(node *DLinkedNode) {
+	this.removeNode(node)
+	this.addToHead(node)
+}
+
+func (this *LRUCache) removeTail() *DLinkedNode {
+	node := this.tail.prev
+	this.removeNode(node)
+	return node
+}
+
+/***** 二叉树的层序遍历 *****/
+// 算法思想：
+// 借助于一个队列，先将根结点入队，然后出队，访问该结点，
+// 若它有左子树，则将左子树根结点入队，若有右子树，则将右子树根节点入队。
+// 然后出队，对出队结点访问，如此往复，直到队列为空。
+func levelOrder(root *TreeNode) [][]int {
+	var res [][]int
+
+	if root == nil { return res	}
+
+	queue := []*TreeNode{root}
+	res = append(res, []int{root.Val})
+	for len(queue) > 0 {
+		var nodes []*TreeNode
+		var resTemp []int
+		for _, n := range queue {
+			if n.Left != nil {
+				nodes = append(nodes, n.Left)
+				resTemp = append(resTemp, n.Left.Val)
+			}
+			if n.Right != nil {
+				nodes = append(nodes, n.Right)
+				resTemp = append(resTemp, n.Right.Val)
+			}
+		}
+		queue = nodes
+		if len(resTemp) > 0 {
+			res = append(res, resTemp)
+		}
+	}
+	return res
+}
+
+/***** 合并区间 *****/
+// TODO
+func merge(intervals [][]int) [][]int {
+	sort.Slice(intervals, func(i, j int) bool {
+		return intervals[i][0] < intervals[j][0]
+	})
+
+	var res [][]int
+	prev := intervals[0]
+
+	for i := 1; i < len(intervals); i++{
+		cur := intervals[i]
+		if prev[1] < cur[0]{
+			res = append(res, prev)
+			prev = cur
+		}else {
+			prev[1] = max(prev[1], cur[1])
+		}
+	}
+	res = append(res, prev)
 	return res
 }
