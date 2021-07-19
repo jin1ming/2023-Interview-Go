@@ -4,6 +4,7 @@ import (
 	"container/heap"
 	"math"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -966,8 +967,10 @@ func levelOrder(root *TreeNode) [][]int {
 }
 
 /***** 合并区间 *****/
-// TODO
+// 以数组 intervals 表示若干个区间的集合，其中单个区间为 intervals[i] = [starti, endi] 。
+// 请你合并所有重叠的区间，并返回一个不重叠的区间数组，该数组需恰好覆盖输入中的所有区间。
 func merge(intervals [][]int) [][]int {
+	// 按照区间开始位置进行排序
 	sort.Slice(intervals, func(i, j int) bool {
 		return intervals[i][0] < intervals[j][0]
 	})
@@ -977,13 +980,215 @@ func merge(intervals [][]int) [][]int {
 
 	for i := 1; i < len(intervals); i++{
 		cur := intervals[i]
+		// 上一个区间的结束位置 在 当前区间的开始位置的左边
+		// 说明没有一点重合
 		if prev[1] < cur[0]{
-			res = append(res, prev)
+			res = append(res, prev) // 直接将prev保存
 			prev = cur
-		}else {
+		} else {
 			prev[1] = max(prev[1], cur[1])
+			// 只需要将结束位置进行合并
 		}
 	}
 	res = append(res, prev)
+	// 别忘记将最后一个区间加入 res
+	return res
+}
+
+/***** 盛最多水的容器 *****/
+// 给你 n 个非负整数 a1，a2，...，an，每个数代表坐标中的一个点 (i, ai)。
+// 在坐标内画 n 条垂直线，垂直线 i 的两个端点分别为 (i, ai) 和 (i, 0)。
+// 找出其中的两条线，使得它们与 x 轴共同构成的容器可以容纳最多的水。
+func maxArea(height []int) int {
+	l, r := 0, len(height) - 1 // 双指针移动
+	store := 0
+	for l < r {
+		area := height[r]
+		if height[l] < area {
+			area = height[l]
+		}
+		area *= r - l
+		if store < area {
+			store = area
+		}
+		// 小的往前走一格
+		if height[l] <= height[r] {
+			l++
+		} else {
+			r--
+		}
+	}
+	return store
+}
+
+/***** 盛最多水的容器 *****/
+// 数字 n 代表生成括号的对数，请你设计一个函数，
+// 用于能够生成所有可能的并且 有效的 括号组合。
+func generateParenthesis(n int) []string {
+	var res = &[]string{}
+	// 注意切片在函数中进行append操作后，是无法返回append生成的切片的
+	add(res, "", n, n)
+	return *res
+}
+
+// left 和 right 代表还需要添加几个左括号和几个右括号
+func add(res *[]string, str string, left int, right int){
+	if left == 0 && right == 0 {
+		*res = append(*res, str)
+	}
+	if left == right {
+		str += "("
+		add(res, str, left-1, right)
+		return
+	}
+	if left > 0 {
+		add(res, str + "(", left-1, right)
+		add(res, str + ")", left, right-1)
+		return
+	}
+	if right > 0 {
+		add(res, str + ")", left, right-1)
+	}
+}
+
+/***** 二叉树的右视图 *****/
+// 给定一个二叉树的 根节点 root，想象自己站在它的右侧，
+// 按照从顶部到底部的顺序，返回从右侧所能看到的节点值。
+func rightSideView(root *TreeNode) []int {
+	var res []int
+	if root == nil {
+		return res
+	}
+	var queue []*TreeNode
+	p := root
+	res = append(res, root.Val)
+	queue = append(queue, root)
+	for len(queue) > 0 {
+		qLen := len(queue)
+		right := math.MinInt32
+		// 保存每一层最右边的值
+		for i := 0; i < qLen; i++ {
+			p = queue[i]
+			if p.Left != nil {
+				queue = append(queue, p.Left)
+				right = p.Left.Val
+			}
+			if p.Right != nil {
+				queue = append(queue, p.Right)
+				right = p.Right.Val
+			}
+		}
+		if right != math.MinInt32 {
+			res = append(res, right)
+		}
+		newQueue := make([]*TreeNode, len(queue) - qLen)
+		copy(newQueue, queue[qLen:])
+		queue = newQueue
+	}
+	return res
+}
+
+/***** 字符串解码 *****/
+func decodeString(s string) string {
+	var stack []string
+	ptr := 0
+	for ptr < len(s) {
+		cur := s[ptr]
+		if cur >= '0' && cur <= '9' {
+			digits := getDigits(s, &ptr)
+			stack = append(stack, digits)
+		} else if (cur >= 'a' && cur <= 'z' || cur >= 'A' && cur <= 'Z') || cur == '[' {
+			stack = append(stack, string(cur))
+			ptr++
+		} else {
+			ptr++
+			var sub []string
+			for stack[len(stack)-1] != "[" {
+				sub = append(sub, stack[len(stack)-1])
+				stack = stack[:len(stack)-1]
+			}
+			for i := 0; i < len(sub)/2; i++ {
+				sub[i], sub[len(sub)-i-1] = sub[len(sub)-i-1], sub[i]
+			}
+			stack = stack[:len(stack)-1]
+			repTime, _ := strconv.Atoi(stack[len(stack)-1])
+			stack = stack[:len(stack)-1]
+			t := strings.Repeat(getString(sub), repTime)
+			stack = append(stack, t)
+		}
+	}
+	return getString(stack)
+}
+
+func getDigits(s string, ptr *int) string {
+	ret := ""
+	for ; s[*ptr] >= '0' && s[*ptr] <= '9'; *ptr++ {
+		ret += string(s[*ptr])
+	}
+	return ret
+}
+
+func getString(v []string) string {
+	ret := ""
+	for _, s := range v {
+		ret += s
+	}
+	return ret
+}
+
+/***** 八皇后 *****/
+// 设计一种算法，打印 N 皇后在 N × N 棋盘上的各种摆法，
+// 其中每个皇后都不同行、不同列，也不在对角线上。
+// 这里的“对角线”指的是所有的对角线，不只是平分整个棋盘的那两条对角线。
+func solveNQueens(n int) [][]string {
+	var res [][]string
+	matrix := make([][]bool, n)
+	for s := range matrix {
+		matrix[s] = make([]bool, n)
+	}
+
+	// 收集结果
+	resAdd := func() {
+		r := make([]string, 0, n)
+		for s := range matrix {
+			buf := strings.Builder{}
+			for i := range matrix[s] {
+				if matrix[s][i] == true {
+					buf.WriteByte('Q')
+				} else {
+					buf.WriteByte('.')
+				}
+			}
+			r = append(r, buf.String())
+		}
+		res = append(res, r)
+	}
+	cols := make([]bool, n)  // 记录访问过的列
+	corner1 := make(map[int]bool)  // 记录该左对角线
+	corner2 := make(map[int]bool)  // 记录该右对角线
+	var dfs func(row int)
+	dfs = func(row int) {
+		if row == n {
+			resAdd()
+			return
+		}
+		for i, v := range matrix[row] {
+			if v == false && cols[i] == false && corner1[i-row] == false && corner2[i+row] == false {
+				if row > 0 && matrix[row][i] {
+					continue
+				}
+				matrix[row][i] = true
+				cols[i] = true
+				corner1[i-row] = true
+				corner2[i+row] = true
+				dfs(row+1)  // 去下一行
+				matrix[row][i] = false
+				cols[i] = false
+				delete(corner1, i-row)
+				delete(corner2, i+row)
+			}
+		}
+	}
+	dfs(0)
 	return res
 }
