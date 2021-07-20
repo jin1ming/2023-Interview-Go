@@ -1089,6 +1089,12 @@ func rightSideView(root *TreeNode) []int {
 }
 
 /***** 字符串解码 *****/
+// 示例：
+// 输入：s = "3[a2[c]]"
+// 输出："accaccacc"
+// 如果当前的字符为数位，解析出一个数字（连续的多个数位）并进栈
+// 如果当前的字符为字母或者左括号，直接进栈
+// 如果当前的字符为右括号，开始出栈，一直到左括号出栈
 func decodeString(s string) string {
 	var stack []string
 	ptr := 0
@@ -1191,4 +1197,262 @@ func solveNQueens(n int) [][]string {
 	}
 	dfs(0)
 	return res
+}
+
+/***** 二叉树的锯齿形层序遍历 *****/
+func zigzagLevelOrder(root *TreeNode) [][]int {
+	var queue [][]*TreeNode
+	var res [][]int
+	if root == nil {
+		return res
+	}
+	queue = append(queue, []*TreeNode{root})
+
+	level := 1
+	for len(queue) != 0 {
+		var values []int
+		curNodes := queue[len(queue)-1]
+		queue = queue[:len(queue)-1]
+		var nodes []*TreeNode
+
+		for _, n := range curNodes {
+			values = append(values, n.Val)
+			if n.Left != nil {
+				nodes = append(nodes, n.Left)
+			}
+			if n.Right != nil {
+				nodes = append(nodes, n.Right)
+			}
+		}
+		if len(nodes) != 0 {
+			queue = append(queue, nodes)
+		}
+		if level % 2 == 0{
+			for i := 0; i < len(values) / 2; i++ {
+				values[i], values[len(values)-1-i] = values[len(values)-1-i], values[i]
+			}
+		}
+		res = append(res, values)
+		level++
+	}
+	return res
+}
+
+/***** 旋转数组的最小数字 *****/
+func minArray(numbers []int) int {
+	left := 0
+	right := len(numbers) - 1
+	// 类似二分查找的方法去寻找
+	for left < right {
+		pivot := left + (right-left) / 2 // 中点
+		if numbers[pivot] < numbers[right] {
+			// 中点比 right 指向的值小
+			// 说明中点往右不存在最小值
+			right = pivot
+		} else if numbers[pivot] > numbers[right] {
+			// 中点比 right 指向的值要大
+			// 说明最小值必然存在于中点和 right 的中间
+			left = pivot + 1
+		} else {
+			// 中点和 right 指向的值相等
+			right--
+		}
+	}
+	return numbers[left]
+}
+
+/***** Z 字形变换 *****/
+// 将一个给定字符串 s 根据给定的行数 numRows ，以从上往下、从左到右进行 Z 字形排列。
+// 比如输入字符串为 "PAYPALISHIRING" 行数为 3 时，排列如下：
+// P   A   H   N
+// A P L S I I G
+// Y   I   R
+// 之后，你的输出需要从左往右逐行读取，产生出一个新的字符串，比如："PAHNAPLSIIGYIR"。
+func convert2(s string, numRows int) string {
+	if numRows == 1 {
+		return s
+	}
+	rows := make([]string, numRows)
+	n := 2 * numRows - 2 // 循环周期
+	for i, char := range s {
+		x := i % n
+		// min(x, n - x) 是行号
+		// 将每行的字符拼接到一块
+		rows[min(x, n - x)] += string(char)
+	}
+	return strings.Join(rows, "")
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+/***** 买卖股票的最佳时机 *****/
+func maxProfit(prices []int) int {
+	if len(prices) == 0 {
+		return 0
+	}
+	res := 0
+	big := prices[0]
+	small := big
+	for _, k := range prices {
+		if k - small > res {
+			res = k - small
+			continue
+		}
+		if k < small {
+			small = k
+		}
+	}
+	return res
+}
+
+/***** 二叉树中的最大路径和 *****/
+func maxPathSum(root *TreeNode) int {
+	if root == nil {
+		return 0
+	}
+
+	maxSum := math.MinInt64
+	if root.Left != nil {
+		maxSum = root.Left.Val
+	}
+	if root.Right != nil {
+		maxSum = root.Right.Val
+	}
+
+	var dfsPath func(*TreeNode) int
+	dfsPath = func(root *TreeNode) int {
+		if root == nil {
+			return 0
+		}
+		leftPath := max(dfsPath(root.Left), 0)
+		rightPath := max(dfsPath(root.Right), 0)
+
+		tmpSum := root.Val + leftPath + rightPath
+		if tmpSum > maxSum {
+			maxSum = tmpSum
+		}
+		return max(leftPath, rightPath) + root.Val
+	}
+	dfsPath(root)
+	return maxSum
+}
+
+/***** 最接近的三数之和 *****/
+// 给定一个包括 n 个整数的数组 nums 和 一个目标值 target。
+// 找出 nums 中的三个整数，使得它们的和与 target 最接近。
+// 返回这三个数的和。假定每组输入只存在唯一答案。
+func threeSumClosest(nums []int, target int) int {
+	sort.Ints(nums)
+	var (
+		n = len(nums)
+		best = math.MaxInt32
+	)
+
+	// 根据差值的绝对值来更新答案
+	update := func(cur int) {
+		if abs(cur - target) < abs(best - target) {
+			best = cur
+		}
+	}
+
+	// 枚举 a
+	for i := 0; i < n; i++ {
+		// 保证和上一次枚举的元素不相等
+		if i > 0 && nums[i] == nums[i-1] {
+			continue
+		}
+		// 使用双指针枚举 b 和 c
+		j, k := i + 1, n - 1
+		for j < k {
+			sum := nums[i] + nums[j] + nums[k]
+			// 如果和为 target 直接返回答案
+			if sum == target {
+				return target
+			}
+			update(sum)
+			if sum > target {
+				// 如果和大于 target，移动 c 对应的指针
+				k0 := k - 1
+				// 移动到下一个不相等的元素
+				for j < k0 && nums[k0] == nums[k] {
+					k0--
+				}
+				k = k0
+			} else {
+				// 如果和小于 target，移动 b 对应的指针
+				j0 := j + 1
+				// 移动到下一个不相等的元素
+				for j0 < k && nums[j0] == nums[j] {
+					j0++
+				}
+				j = j0
+			}
+		}
+	}
+	return best
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -1 * x
+	}
+	return x
+}
+
+
+
+func restoreIpAddresses(s string) []string {
+	const SEG_COUNT = 4
+	var (
+		ans []string
+		segments []int
+	)
+	var dfs func(s string, segId, segStart int)
+	dfs = func(s string, segId, segStart int) {
+		// 如果找到了 4 段 IP 地址并且遍历完了字符串，那么就是一种答案
+		if segId == SEG_COUNT {
+			if segStart == len(s) {
+				ipAddr := ""
+				for i := 0; i < SEG_COUNT; i++ {
+					ipAddr += strconv.Itoa(segments[i])
+					if i != SEG_COUNT - 1 {
+						ipAddr += "."
+					}
+				}
+				ans = append(ans, ipAddr)
+			}
+			return
+		}
+
+		// 如果还没有找到 4 段 IP 地址就已经遍历完了字符串，那么提前回溯
+		if segStart == len(s) {
+			return
+		}
+		// 由于不能有前导零，如果当前数字为 0，那么这一段 IP 地址只能为 0
+		if s[segStart] == '0' {
+			segments[segId] = 0
+			dfs(s, segId + 1, segStart + 1)
+		}
+		// 一般情况，枚举每一种可能性并递归
+		addr := 0
+		for segEnd := segStart; segEnd < len(s); segEnd++ {
+			addr = addr * 10 + int(s[segEnd] - '0')
+			if addr > 0 && addr <= 0xFF {
+				segments[segId] = addr
+				dfs(s, segId + 1, segEnd + 1)
+			} else {
+				break
+			}
+		}
+	}
+
+	segments = make([]int, SEG_COUNT)
+	ans = []string{}
+	dfs(s, 0, 0)
+	return ans
 }
