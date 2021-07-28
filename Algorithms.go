@@ -67,7 +67,6 @@ func convert(sign int, absStr string) int {
 }
 
 /***** Pow(x, n) *****/
-
 func myPow(x float64, n int) float64 {
 	if n >= 0 {
 		return quickMul(x, n)
@@ -1404,8 +1403,10 @@ func abs(x int) int {
 	return x
 }
 
-
-
+/***** 复原 IP 地址 *****/
+// 给定一个只包含数字的字符串，用以表示一个 IP 地址，
+// 返回所有可能从 s 获得的 有效 IP 地址。
+// 你可以按任何顺序返回答案。
 func restoreIpAddresses(s string) []string {
 	const SEG_COUNT = 4
 	var (
@@ -1455,4 +1456,198 @@ func restoreIpAddresses(s string) []string {
 	ans = []string{}
 	dfs(s, 0, 0)
 	return ans
+}
+
+/***** 只出现一次的数字 *****/
+// 给定一个非空整数数组，除了某个元素只出现一次以外，
+// 其余每个元素均出现两次。找出那个只出现了一次的元素。
+func singleNumber(nums []int) int {
+	single := 0
+	for _, num := range nums {
+		// 出现两次的数字会抵消为 0
+		// 最后剩的就是最终的结果
+		single ^= num
+	}
+	return single
+}
+
+/***** 快速排序 *****/
+func sortArray(nums []int) []int {
+
+	var quickSort func(left, right int)
+	var findPosition func(left, right int) int
+
+	quickSort = func(left, right int) {
+		if left >= right {
+			return
+		}
+		pos := findPosition(left, right)
+		quickSort(left, pos-1)
+		quickSort(pos+1, right)
+	}
+
+	findPosition = func(left, right int) int {
+		temp := nums[left]
+
+		for left < right {
+			for left < right && nums[right] >= temp {
+				right--
+			}
+			nums[left] = nums[right]
+			for left < right && nums[left] <= temp {
+				left++
+			}
+			nums[right] = nums[left]
+		}
+
+		nums[left] = temp
+		return left
+	}
+
+	quickSort(0, len(nums) - 1)
+
+	return nums
+}
+
+/***** 在排序数组中查找元素的第一个和最后一个位置 *****/
+// 给定一个按照升序排列的整数数组 nums，和一个目标值 target。
+// 找出给定目标值在数组中的开始位置和结束位置。
+// 如果数组中不存在目标值 target，返回 [-1, -1]。
+func searchRange(nums []int, target int) []int {
+	left, right := 0, len(nums) - 1
+	var mid int
+	for left < right {
+		mid = left + (right - left) / 2
+		if nums[mid] < target {
+			left = mid + 1 // 不加 1 可能死循环
+		} else if nums[mid] > target {
+			right = mid
+		} else {
+			break
+		}
+	}
+	/* 注意 */
+	mid = left + (right - left) / 2
+	if len(nums) == 0 || mid < 0 || mid - 1 > len(nums) || nums[mid] != target {
+		return []int{-1, -1}
+	}
+	/* --- */
+	res := []int{mid, mid}
+	for res[0] > 0 && nums[res[0]-1] == target {
+		res[0]--
+	}
+	for res[1] < len(nums) - 1 && nums[res[1]+1] == target {
+		res[1]++
+	}
+	return res
+}
+
+func searchRange2(nums []int, target int) []int {
+	leftmost := sort.SearchInts(nums, target)
+	if leftmost == len(nums) || nums[leftmost] != target {
+		return []int{-1, -1}
+	}
+	rightmost := sort.SearchInts(nums, target + 1) - 1
+	return []int{leftmost, rightmost}
+}
+
+/***** 有效的数独 *****/
+// 请你判断一个 9x9 的数独是否有效。
+// 数字 1-9 在每一行只能出现一次。
+// 数字 1-9 在每一列只能出现一次。
+// 数字 1-9 在每一个以粗实线分隔的 3x3 宫内只能出现一次。
+// 数独部分空格内已填入了数字，空白格用 '.' 表示。
+func isValidSudoku(board [][]byte) bool {
+	// 行列检测
+	for i:=0;i<9;i++ {
+		mp1 := map[byte]bool{}
+		mp2 := map[byte]bool{}
+		mp3 := map[byte]bool{}
+		for j:=0;j<9;j++ {
+			// row
+			if board[i][j] != '.' {
+				if mp1[board[i][j]] {
+					return false
+				}
+				mp1[board[i][j]] = true
+			}
+			// column
+			if board[j][i] != '.' {
+				if mp2[board[j][i]] {
+					return false
+				}
+				mp2[board[j][i]] = true
+			}
+			// part
+			row := (i%3)*3 + j%3
+			col := (i/3)*3 + j/3
+			if board[row][col] != '.' {
+				if mp3[board[row][col]] {
+					return false
+				}
+				mp3[board[row][col]] = true
+			}
+		}
+	}
+	return true
+}
+
+/***** 二叉树的最近公共祖先 *****/
+func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
+	if root == nil || root == p || root == q {
+		return root
+	}
+	left := lowestCommonAncestor(root.Left, p, q)
+	right := lowestCommonAncestor(root.Right, p, q)
+	if left == nil {
+		return right
+	}
+	if right == nil {
+		return left
+	}
+	return root
+}
+
+/***** 把二叉搜索树转换为累加树 *****/
+// 给出二叉 搜索 树的根节点，该树的节点值各不相同，请你将其转换为累加树，
+// 使每个节点 node 的新值等于原树中大于或等于 node.val 的值之和。
+// 思路:
+// 访问每个节点时，时刻维护变量 sum 。
+// 反向中序遍历（按值从大到小遍历）
+func convertBST(root *TreeNode) *TreeNode {
+	sum := 0
+	var dfs func(*TreeNode)
+	dfs = func(node *TreeNode) {
+		if node != nil {
+			dfs(node.Right)
+			sum += node.Val
+			node.Val = sum
+			dfs(node.Left)
+		}
+	}
+	dfs(root)
+	return root
+}
+
+/***** 二叉树展开为链表 *****/
+func flatten(root *TreeNode) {
+	var lastNode *TreeNode
+	var dfs func(*TreeNode)
+	dfs = func(node *TreeNode) {
+		if node == nil { return }
+		if lastNode != nil {
+			lastNode.Right = node
+			lastNode.Left = nil
+		}
+		lastNode = node
+		if node.Left != nil {
+			dfs(node.Left)
+		}
+		if node.Right != nil {
+			dfs(node.Right)
+		}
+	}
+	dfs(root)
+	lastNode.Left = nil
+	lastNode.Right = nil
 }
