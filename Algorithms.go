@@ -1722,3 +1722,135 @@ func minMeetingRooms(intervals [][]int) int {
 	}
 	return maxRoom
 }
+
+/***** 最多删除一个字符得到回文 *****/
+func validPalindrome(s string) bool {
+	var isValid func(s string, flag bool) bool
+	isValid = func(s string, flag bool) bool {
+		if len(s) < 2 {
+			return true
+		}
+		i, j := 0, len(s) - 1
+		for i < j {
+			if s[i] == s[j] {
+				i++
+				j--
+			} else if !flag {
+				return false
+			} else {
+				return isValid(s[i+1:j+1], false) ||
+					isValid(s[i:j], false)
+			}
+		}
+		return true
+	}
+	return isValid(s, true)
+}
+
+/***** 最小路径之和 *****/
+// 一个机器人每次只能向下或者向右移动一步
+func minPathSum(grid [][]int) int {
+	row := len(grid)
+	if row < 2 { return 0 }
+	col := len(grid)
+	if col < 2 { return 0 }
+
+	for r := 1; r < row; r++ {
+		grid[r][0] += grid[r-1][0]
+	}
+	for c := 1; c < col; c++ {
+		grid[0][c] += grid[0][c-1]
+	}
+
+	getMinDis := func(r, c int) int {
+		left := grid[r][c-1]
+		top := grid[r-1][c]
+		if left < top {
+			return left
+		}
+		return top
+	}
+
+	for r := 1; r < row; r++ {
+		for c := 1; c < col; c++ {
+			grid[r][c] += getMinDis(r, c)
+		}
+	}
+	return grid[row-1][col-1]
+}
+
+/***** 矩阵中最大的矩形 *****/
+func maximalRectangle0(matrix [][]byte) int {
+	row := len(matrix)
+	if row == 0 {return 0}
+	col := len(matrix[0])
+	if col == 0 {return 0}
+
+	dp := make([][]int, row)
+	// 保存的是左边有几个连续的 1
+	// 避免每次都要遍历
+	for i := range dp {
+		dp[i] = make([]int, col)
+		dp[i][0] = int(matrix[i][0] - '0')
+	}
+	for r := 0; r < row; r++ {
+		for c := 1; c < col; c++ {
+			if matrix[r][c] == '0' {
+				continue
+			}
+			dp[r][c] = dp[r][c-1] + 1
+		}
+	}
+
+	res := 0
+	// 以(i, j)为右下角，寻找左上角可能存在的最大矩形
+	// 高度不断增加，随着更新宽度，判断是否需要更新最大面积
+	for i := 0; i < row; i++ {
+		for j := 0; j < col; j++ {
+			w := dp[i][j]
+			for k := i; k >= 0; k-- {
+				w = min(w, dp[k][j])
+				if w == 0 {
+					break
+				}
+				res = max(res, w * (i-k+1))
+			}
+		}
+	}
+	return res
+}
+
+/***** 两整数之和 *****/
+// 不允许使用 +、-
+func getSum(a, b int) int {
+	for a != 0 {
+		temp := a ^ b
+		a = (a&b) << 1
+		b = temp
+	}
+	return b
+}
+
+/***** 单词长度的最大乘积 *****/
+func maxProduct(words []string) int {
+	// rune 用26位保存26个字母
+	bitmap := make([]rune, len(words))
+	for k, v := range words {
+		for i := 0; i < len(v); i++ {
+			bitmap[k] |= 1 << (v[i] - 'a')
+		}
+	}
+
+	res := 0
+	for i := 0; i < len(words); i++ {
+		for j := i + 1; j < len(words); j++ {
+			if bitmap[i] & bitmap[j] == 0 {
+				mul := len(words[i]) * len(words[j])
+				if mul > res {
+					res = mul
+				}
+			}
+		}
+	}
+	return res
+}
