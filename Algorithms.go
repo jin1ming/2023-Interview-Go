@@ -1854,3 +1854,48 @@ func maxProduct(words []string) int {
 	}
 	return res
 }
+
+/***** 和大于等于 target 的最短子数组 *****/
+// 滑动窗口一定要 right 考虑为先！！！！！！！
+func minSubArrayLen(target int, nums []int) int {
+	res := math.MaxInt64
+	left, sum := 0, 0
+	for right := 0; right < len(nums); right++ {
+		sum += nums[right]
+		if sum >= target {
+			for sum - nums[left] >= target {
+				sum -= nums[left]
+				left++
+			}
+			if right - left + 1 < res {
+				res = right - left
+			}
+		}
+	}
+	if res == math.MaxInt64 {
+		return 0
+	}
+	return res
+}
+
+/***** 乘积小于 K 的子数组 *****/
+// 滑动窗口一定要 right 考虑为先！！！！！！！
+func numSubarrayProductLessThanK(nums []int, k int) int {
+	left := 0
+	sum, res := 1, 0
+
+	// 每次循环找出满足条件的最大的 left，再将 right 加 1
+	// 因为 nums 中每个数都大于等于 1
+	// 所以每次 right 右移后，left 向左移动时不会满足条件
+	for right := 0; right < len(nums); right++ {
+		sum *= nums[right]
+		for left <= right && sum >= k {
+			sum /= nums[left]
+			left++
+		}
+		res += right - left + 1
+		right++
+	}
+	return res
+}
+
