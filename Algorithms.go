@@ -215,7 +215,7 @@ func twoSum2(nums []int, target int) []int {
 
 /***** 无重复字符的最长子串 *****/
 // 类型: 滑动窗口
-func lengthOfLongestSubstring(s string) int {
+func lengthOfLongestSubstring1(s string) int {
 	if len(s) == 0 {
 		return 0
 	}
@@ -240,6 +240,26 @@ func lengthOfLongestSubstring(s string) int {
 	}
 	return maxLen
 }
+
+func lengthOfLongestSubstring2(s string) int {
+	res, left := 0, 0
+	bitmap := make(map[byte]int)
+
+	for right := 0; right < len(s); right++ {
+		if c, ok := bitmap[s[right]]; ok {
+			for left <= c {
+				delete(bitmap, s[left])
+				left++
+			}
+		}
+		bitmap[s[right]] = right
+		if right - left > res {
+			res = right - left
+		}
+	}
+	return res + 1
+}
+
 
 /***** 最长回文子串 *****/
 // 中心扩展算法
@@ -1666,38 +1686,38 @@ func hammingDistance(x int, y int) int {
 }
 
 /***** 找到字符串中所有字母异位词 *****/
-func findAnagrams(s string, p string) []int {
-	pl := len(p)
-	sl := len(s)
-	if pl > sl {
+// 滑动窗口
+func findAnagrams2(s string, p string) []int {
+	n, m := len(s), len(p)
+	if n < m {
 		return nil
 	}
-	var result []int
 
-	m := make(map[byte]int)
-	for i := 0; i < pl; i++ {
-		m[p[i]]++
+	var res []int
+	cntS, cntP := [26]int{}, [26]int{}
+	for i := 0; i < m; i++ {
+		cntP[p[i]-'a']++
 	}
 
-	for i1 := 0; i1 < pl; i1++ {
-		m[s[i1]]--
-	}
-
-	out:
-	for i := 0; i < sl-pl+1; i++ {
-		if i > 0 {
-			m[s[i-1]]++
-			m[s[i+pl-1]]--
+	left, right := 0, 0
+	// 右窗口开始不断向右移动
+	for ; right < n; right++ {
+		curRight := s[right] - 'a'
+		// 将右窗口当前访问到的元素个数加1
+		cntS[curRight]++
+		// 当前窗口中 curRight 比 cntP 数组中对应元素的个数
+		// 要多的时候就该移动左窗口指针
+		for cntS[curRight] > cntP[curRight] {
+			curLeft := s[left] - 'a'
+			// 将左窗口当前访问到的元素个数减1
+			cntS[curLeft]--
+			left++
 		}
-
-		for _, v := range m {
-			if v != 0 {
-				continue out
-			}
+		if right-left+1 == m {
+			res = append(res, left)
 		}
-		result = append(result, i)
 	}
-	return result
+	return res
 }
 
 /***** 会议室 II *****/
@@ -1922,3 +1942,60 @@ func subarraySum(nums []int, k int) int {
 	return res
 }
 
+type NumMatrix struct {
+	preSums [][]int
+}
+
+// Constructor1 /***** 二维子矩阵的和 *****/
+func Constructor1(matrix [][]int) NumMatrix {
+	row := len(matrix)
+	// preSums[i+1][j+1] 保存(0,0)到(i,j)形成矩阵内所有元素的和
+	preSums := make([][]int, row+1)
+	col := len(matrix[0])
+	for i := range preSums {
+		preSums[i] = make([]int, col+1)
+	}
+	for i := 0; i < row; i++ {
+		for j := 0; j < col; j++ {
+			preSums[i+1][j+1] = preSums[i][j+1] + preSums[i+1][j] -
+				preSums[i][j] + matrix[i][j]
+		}
+	}
+	return NumMatrix{preSums: preSums}
+}
+
+// SumRegion 返回左上角 (row1, col1) 、右下角 (row2, col2) 的子矩阵的元素总和。
+func (this *NumMatrix) SumRegion(row1 int, col1 int, row2 int, col2 int) int {
+	// 画图表示好理解些
+	return this.preSums[row2+1][col2+1] - this.preSums[row1][col2+1] -
+		this.preSums[row2+1][col1] + this.preSums[row1][col1]
+}
+
+/***** 0 和 1 个数相同的子数组 *****/
+func findMaxLength(nums []int) int {
+	offsetMap := make(map[int]int)
+	offsetMap[0] = -1
+	res := 0
+	offset := 0
+	var k int
+	var ok bool
+	for i, v := range nums {
+		if v == 0 {
+			offset--
+		} else {
+			offset++
+		}
+		if offset == 0 {
+			res = i + 1
+			continue
+		}
+		k, ok = offsetMap[offset]
+		if ok && i - k > res {
+			res = i - k
+		}
+		if !ok {
+			offsetMap[offset] = i
+		}
+	}
+	return res
+}
