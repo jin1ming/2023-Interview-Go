@@ -1899,3 +1899,26 @@ func numSubarrayProductLessThanK(nums []int, k int) int {
 	return res
 }
 
+/***** 和为 k 的子数组 *****/
+// 给定一个整数数组（可能为负数）和一个整数 k ，
+// 请找到该数组中和为 k 的连续子数组的个数。
+func subarraySum(nums []int, k int) int {
+	res := 0
+	// bitmap 存储从数组起始位置到当前位置出现了几次
+	bitmap := make(map[int]int)
+	sum := 0
+	// 注意要将开始 sum 为 0 时标记，不然之后统计会缺少
+	bitmap[0] = 1
+	for _, v := range nums {
+		sum += v
+		if count, ok := bitmap[sum - k]; ok {
+			// 从当前位置往前看，sum - k 出现了几次
+			res += count
+		}
+		// 注意更新 map 放在循环最后，不然当 k == 0 时，
+		// 会出现任何时候 sum - 0 == sum，错误统计
+		bitmap[sum] += 1
+	}
+	return res
+}
+
