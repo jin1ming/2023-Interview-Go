@@ -1999,3 +1999,69 @@ func findMaxLength(nums []int) int {
 	}
 	return res
 }
+
+/***** 回文子字符串的个数 *****/
+func countSubstrings(s string) int {
+	res := 0
+	for i := 0; i < len(s); i++ {
+		left, right := i, i
+		for left - 1 >= 0 && right + 1 < len(s) &&
+			s[left-1] == s[right+1] {
+			left--
+			right++
+		}
+		res += (right - left) / 2 + 1
+		left, right = i - 1, i
+		for left >= 0 && right < len(s) &&
+			s[left] == s[right] {
+			left--
+			right++
+		}
+		res += (right - left - 1) / 2
+	}
+	return res
+}
+
+/***** 含有所有字符的最短字符串 *****/
+func minWindow(s string, t string) string {
+	if len(t) > len(s) {return ""}
+	count := 'z' - 'A' + 1
+	// nums 用来存储哪些字母还不够
+	nums := make([]int, count)
+	// used 用来存储哪些字母出现在t中
+	used := make([]bool, count)
+	// status 表示还剩几个字母没满足条件
+	status := 0
+	res := ""
+	// 初始化 nums、used、status
+	for i := 0; i < len(t); i++ {
+		k := int(t[i] - 'A')
+		if nums[k] == 0 {
+			status++
+		}
+		nums[k]--
+		used[k] = true
+	}
+
+	left := 0
+	for right := 0; right < len(s); right++ {
+		k := int(s[right]-'A')
+		if used[k] == false {
+			continue
+		}
+		nums[k]++
+		if nums[k] == 0 {
+			status--
+		}
+		if status == 0 {
+			for !used[int(s[left]-'A')] || nums[int(s[left])-'A'] - 1 >= 0 {
+				nums[int(s[left])-'A']--
+				left++
+			}
+			if right - left + 1 < len(res) || len(res) == 0 {
+				res = s[left:right]
+			}
+		}
+	}
+	return res
+}
