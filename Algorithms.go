@@ -2065,3 +2065,25 @@ func minWindow(s string, t string) string {
 	}
 	return res
 }
+
+/***** 链表中环的入口节点 *****/
+func detectCycle(head *ListNode) *ListNode {
+	if head == nil || head.Next == nil {
+		return nil
+	}
+	// 注意这里，slow和fast初始要走相应的步数
+	fast, slow := head.Next.Next, head.Next
+	for fast != slow {
+		slow = slow.Next
+		if fast == nil || fast.Next == nil {
+			return nil
+		}
+		fast = fast.Next.Next
+	}
+	slow = head
+	for slow != fast {
+		slow = slow.Next
+		fast = fast.Next
+	}
+	return slow
+}
