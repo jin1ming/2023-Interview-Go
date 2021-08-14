@@ -3,9 +3,11 @@ package algorithms
 import (
 	"container/heap"
 	"math"
+	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 /***** 字符串转换整数 (atoi) *****/
@@ -888,8 +890,8 @@ func initDLinkedNode(key, value int) *DLinkedNode {
 	}
 }
 
-// Constructor /***** LRU 缓存 *****/
-func Constructor(capacity int) LRUCache {
+// Constructor2 /***** LRU 缓存 *****/
+func Constructor2(capacity int) LRUCache {
 	l := LRUCache{
 		cache: map[int]*DLinkedNode{},
 		head: initDLinkedNode(0, 0),
@@ -909,7 +911,6 @@ func (this *LRUCache) Get(key int) int {
 	this.moveToHead(node)
 	return node.value
 }
-
 
 func (this *LRUCache) Put(key int, value int)  {
 	if _, ok := this.cache[key]; !ok {
@@ -2159,3 +2160,46 @@ func flatten2(root *Node) *Node {
 	dummyHead.Next.Prev = nil
 	return dummyHead.Next
 }
+
+type RandomizedSet struct {
+	nums []int  // 用于随机访问
+	M map[int]int  // 实现O(1)的访问和删除
+	rand *rand.Rand  // 随机数种子
+}
+
+// Constructor /***** 插入、删除和随机访问都是 O(1) 的容器 *****/
+func Constructor() RandomizedSet {
+	r := RandomizedSet{M: make(map[int]int),
+		rand: rand.New(rand.NewSource(time.Now().UnixNano()))}
+	return r
+}
+
+func (this *RandomizedSet) Insert(val int) bool {
+	if _, ok := this.M[val]; ok {
+		return false
+	}
+	this.M[val] = len(this.nums)
+	this.nums = append(this.nums, val)
+	return true
+}
+
+func (this *RandomizedSet) Remove(val int) bool {
+	if _, ok := this.M[val]; !ok {
+		return false
+	}
+	// 将当前值和数组末尾值互换位置再删除
+	index := this.M[val]
+	t := this.nums[len(this.nums)-1]
+	this.nums[index] = t
+	this.M[t] = index
+
+	delete(this.M, val)
+	this.nums = this.nums[:len(this.nums)-1]
+	return true
+}
+
+func (this *RandomizedSet) GetRandom() int {
+	index := this.rand.Intn(len(this.nums))
+	return this.nums[index]
+}
+
