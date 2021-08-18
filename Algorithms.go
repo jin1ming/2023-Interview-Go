@@ -92,28 +92,145 @@ func largestRectangleArea(heights []int) int {
 	// 首尾添加负数高度，这样原本的第一个高度能形成升序，原本的最后一个高度也能得到处理
 	heights = append([]int{-2}, heights...)
 	heights = append(heights, -1)
-	size:=len(heights)
+	size := len(heights)
 	// 递增栈
-	s:=make([]int,1,size)
+	s := make([]int, 1, size)
 
-	res:=0
-	i:=1
+	res := 0
+	i := 1
 	for i < len(heights) {
 		// 递增则入栈
-		if heights[s[len(s)-1]]<heights[i]{
-			s=append(s,i)
+		if heights[s[len(s)-1]] < heights[i] {
+			s = append(s, i)
 			i++
 			continue
 		}
 		// s[len(s)-2]是矩形的左边界
-		res=max(res, heights[s[len(s)-1]]*(i-s[len(s)-2]-1))
-		s=s[:len(s)-1]
+		res = max(res, heights[s[len(s)-1]]*(i-s[len(s)-2]-1))
+		s = s[:len(s)-1]
 	}
 	return res
 }
-func max(a,b int)int{
-	if a>b{return a}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
 	return b
+}
+
+func largestRectangleArea2(heights []int) int {
+	N := len(heights)
+	if N == 0 {
+		return 0
+	}
+
+	// 栈的简易实现
+	st, pos := make([]int, N+2), 0
+	push := func(v int) {
+		st[pos] = v
+		pos++
+	}
+	pop := func() int {
+		pos--
+		return st[pos]
+	}
+	top := func() int {
+		return st[pos-1]
+	}
+
+	// 首尾各加一个哨兵
+	get := func(i int) int {
+		if i == 0 || i == N+1 {
+			return 0
+		}
+		return heights[i-1]
+	}
+
+	// 这里才开始
+	res := 0
+	for i := 0; i < N+2; i++ {
+		for pos > 0 && get(top()) > get(i) {
+			res = max(get(pop())*(i-top()-1), res)
+		}
+		push(i)
+	}
+	return res
+}
+
+/***** 最大矩形 *****/
+// 给定一个仅包含 0 和 1 、大小为 rows x cols 的二维二进制矩阵，
+// 找出只包含 1 的最大矩形，并返回其面积。
+func maximalRectangle(matrix []string) int {
+	row := len(matrix)
+	if row == 0 {
+		return 0
+	}
+	col := len(matrix[0])
+	if col == 0 {
+		return 0
+	}
+
+	dp := make([][]int, row)
+	// 保存的是左边有几个连续的 1
+	// 避免每次都要遍历
+	for i := range dp {
+		dp[i] = make([]int, col)
+		dp[i][0] = int(matrix[i][0] - '0')
+	}
+	for r := 0; r < row; r++ {
+		for c := 1; c < col; c++ {
+			if matrix[r][c] == '0' {
+				continue
+			}
+			dp[r][c] = dp[r][c-1] + 1
+		}
+	}
+
+	res := 0
+	// 以(i, j)为右下角，寻找左上角可能存在的最大矩形
+	// 高度不断增加，随着更新宽度，判断是否需要更新最大面积
+	for i := 0; i < row; i++ {
+		for j := 0; j < col; j++ {
+			w := dp[i][j]
+			for k := i; k >= 0; k-- {
+				w = min(w, dp[k][j])
+				if w == 0 {
+					break
+				}
+				res = max(res, w*(i-k+1))
+			}
+		}
+	}
+	return res
+}
+
+//单调栈实现
+func maximalRectangle2(matrix [][]byte) int {
+	if matrix == nil || len(matrix) == 0 {
+		return 0
+	}
+	//保存最终结果
+	res := 0
+	//行数，列数
+	m, n := len(matrix), len(matrix[0])
+	//高度数组（统计每一行中1的高度）
+	height := make([]int, n)
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			//每一行去找1的高度
+			//如果不是‘1’，则将当前高度置为0
+			if matrix[i][j] == '0' {
+				height[j] = 0
+			} else {
+				//是‘1’，则将高度加1
+				height[j] = height[j] + 1
+			}
+		}
+		//更新最大矩形的面积
+		res = int(math.Max(float64(res), float64(largestRectangleArea2(height))))
+	}
+	return res
 }
 
 /***** 单词拆分  *****/
@@ -127,7 +244,7 @@ func wordBreak(s string, wordDict []string) bool {
 	for _, w := range wordDict {
 		wordDictSet[w] = true
 	}
-	dp := make([]bool, len(s) + 1)
+	dp := make([]bool, len(s)+1)
 	dp[0] = true
 	for i := 1; i <= len(s); i++ {
 		for j := 0; j < i; j++ {
@@ -139,7 +256,6 @@ func wordBreak(s string, wordDict []string) bool {
 	}
 	return dp[len(s)]
 }
-
 
 /***** 前K个高频元素 *****/
 func topKFrequent(nums []int, k int) []int {
@@ -157,7 +273,7 @@ func topKFrequent(nums []int, k int) []int {
 	}
 	ret := make([]int, k)
 	for i := 0; i < k; i++ {
-		ret[k - i - 1] = heap.Pop(h).([2]int)[0]
+		ret[k-i-1] = heap.Pop(h).([2]int)[0]
 	}
 	return ret
 }
@@ -182,7 +298,7 @@ func (h *IHeap) Pop() interface{} {
 
 /***** 两数之和 *****/
 func twoSum(nums []int, target int) []int {
-	left, right := 0, len(nums) - 1
+	left, right := 0, len(nums)-1
 	indexs := make([]int, len(nums))
 	for i, _ := range indexs {
 		indexs[i] = i
@@ -229,7 +345,7 @@ func lengthOfLongestSubstring1(s string) int {
 	dp[0] = 1
 	bitmap[s[0]] = 0
 	for i := 1; i < len(s); i++ {
-		if v, ok := bitmap[s[i]]; ok && v >= i - dp[i-1] {
+		if v, ok := bitmap[s[i]]; ok && v >= i-dp[i-1] {
 			// 该字符在当前窗口曾经出现过
 			dp[i] = i - v
 		} else {
@@ -255,13 +371,12 @@ func lengthOfLongestSubstring2(s string) int {
 			}
 		}
 		bitmap[s[right]] = right
-		if right - left > res {
+		if right-left > res {
 			res = right - left
 		}
 	}
 	return res + 1
 }
-
 
 /***** 最长回文子串 *****/
 // 中心扩展算法
@@ -272,26 +387,28 @@ func longestPalindrome(s string) string {
 	start, end := 0, 0
 	for i := 0; i < len(s); i++ {
 		left1, right1 := expandAroundCenter(s, i, i)
-		left2, right2 := expandAroundCenter(s, i, i + 1)
-		if right1 - left1 > end - start {
+		left2, right2 := expandAroundCenter(s, i, i+1)
+		if right1-left1 > end-start {
 			start, end = left1, right1
 		}
-		if right2 - left2 > end - start {
+		if right2-left2 > end-start {
 			start, end = left2, right2
 		}
 	}
-	return s[start:end+1]
+	return s[start : end+1]
 }
 
 func expandAroundCenter(s string, left, right int) (int, int) {
-	for ; left >= 0 && right < len(s) && s[left] == s[right]; left, right = left-1 , right+1 { }
+	for ; left >= 0 && right < len(s) && s[left] == s[right]; left, right = left-1, right+1 {
+	}
 	return left + 1, right - 1
 }
 
 type ListNode struct {
-    Val int
-    Next *ListNode
+	Val  int
+	Next *ListNode
 }
+
 /***** 反转链表 *****/
 func reverseList(head *ListNode) *ListNode {
 	var root *ListNode
@@ -320,22 +437,22 @@ func permute(nums []int) [][]int {
 	return res
 }
 
-func dfs1(nums []int, length int, depth int, path []int, used []bool, res *[][]int){
-	if  depth == length {
+func dfs1(nums []int, length int, depth int, path []int, used []bool, res *[][]int) {
+	if depth == length {
 		p := make([]int, length)
-		copy(p, path)  // 注意使用copy
+		copy(p, path) // 注意使用copy
 		*res = append(*res, p)
 		return
 	}
 
 	for i := 0; i < length; i++ {
-		if used[i]{
+		if used[i] {
 			continue
 		}
 		path = append(path, nums[i])
 		used[i] = true
-		dfs1(nums, length, depth + 1, path, used, res)
-		path = path[:len(path) - 1]
+		dfs1(nums, length, depth+1, path, used, res)
+		path = path[:len(path)-1]
 		used[i] = false
 	}
 }
@@ -350,8 +467,8 @@ func jump(nums []int) int {
 	end := 0
 	maxPosition := 0
 	steps := 0
-	for i := 0; i < length - 1; i++ {
-		maxPosition = max(maxPosition, i + nums[i])
+	for i := 0; i < length-1; i++ {
+		maxPosition = max(maxPosition, i+nums[i])
 		// 当前可到达最远位置
 		if i == end {
 			// 已经到达可走的最远位置
@@ -386,12 +503,12 @@ func threeSum(nums []int) [][]int {
 			for ptrLeft < ptrRight {
 				sum := nums[k] + nums[ptrLeft] + nums[ptrRight]
 				if sum == 0 {
-					r := []int {nums[k], nums[ptrLeft], nums[ptrRight]}
+					r := []int{nums[k], nums[ptrLeft], nums[ptrRight]}
 					res = append(res, r)
-					for ptrLeft < ptrRight && nums[ptrLeft] == nums[ptrLeft + 1]{
+					for ptrLeft < ptrRight && nums[ptrLeft] == nums[ptrLeft+1] {
 						ptrLeft += 1
 					}
-					for ptrLeft < ptrRight && nums[ptrRight] == nums[ptrRight - 1]{
+					for ptrLeft < ptrRight && nums[ptrRight] == nums[ptrRight-1] {
 						ptrRight -= 1
 					}
 				}
@@ -411,7 +528,7 @@ func threeSum(nums []int) [][]int {
 //每次你可以爬 1 或 2 个台阶。你有多少种不同的方法可以爬到楼顶呢？
 func climbStairs(n int) int {
 	switch n {
-	case 0,1:
+	case 0, 1:
 		return 1
 	default:
 		tmp := []int{1, 1}
@@ -428,7 +545,7 @@ func climbStairs(n int) int {
 //给定一个单链表 L：L0→L1→…→Ln-1→Ln ，
 //将其重新排列后变为： L0→Ln→L1→Ln-1→L2→Ln-2→…
 //你不能只是单纯的改变节点内部的值，而是需要实际的进行节点交换。
-func reorderList(head *ListNode)  {
+func reorderList(head *ListNode) {
 	if head == nil {
 		return
 	}
@@ -441,7 +558,7 @@ func reorderList(head *ListNode)  {
 		p = p.Next
 	}
 	p = head
-	for i := 1; i < (length+1) / 2; i++ {
+	for i := 1; i < (length+1)/2; i++ {
 		p = p.Next
 	}
 
@@ -463,7 +580,7 @@ func reorderList(head *ListNode)  {
 	}
 }
 
-func reverse(head *ListNode) *ListNode{
+func reverse(head *ListNode) *ListNode {
 	var tmp *ListNode
 	var root *ListNode
 	for head != nil {
@@ -480,15 +597,15 @@ func reverseParentheses(s string) string {
 	// 字符串无法直接修改，转换为byte slice
 	brr := []byte(s)
 	var stack []int
-	for i := 0; i < len(brr); i ++ {
+	for i := 0; i < len(brr); i++ {
 		if brr[i] == '(' {
 			// 遇到左括号，加入栈中
 			stack = append(stack, i)
-		} else if brr[i] == ')'{
+		} else if brr[i] == ')' {
 			// 题目保证括号左右匹配，所以不用检验stack中是否有左括号
 			lastIdx := stack[len(stack)-1]
 			// 反转左括号位置+1到右括号位置-1之间的字符
-			for lj, rj := lastIdx + 1, i - 1; lj < rj; lj, rj = lj +1, rj -1 {
+			for lj, rj := lastIdx+1, i-1; lj < rj; lj, rj = lj+1, rj-1 {
 				brr[lj], brr[rj] = brr[rj], brr[lj]
 			}
 			// 已匹配的左括号退栈
@@ -498,8 +615,8 @@ func reverseParentheses(s string) string {
 
 	// 去掉所有括号字符
 	sb := strings.Builder{}
-	for i := 0; i < len(brr); i ++ {
-		if brr[i] != '(' && brr[i] !=')' {
+	for i := 0; i < len(brr); i++ {
+		if brr[i] != '(' && brr[i] != ')' {
 			sb.WriteByte(brr[i])
 		}
 	}
@@ -527,7 +644,7 @@ func trap(height []int) int {
 			if pre == -1 {
 				pre = i
 			} else {
-				capacity += i - pre -1
+				capacity += i - pre - 1
 				pre = i
 			}
 		}
@@ -588,12 +705,12 @@ func mergeSort(nums []int, start, end int) int {
 	if start >= end {
 		return 0
 	}
-	mid := start + (end - start)/2 // 防止start和end相加引起的数组越界
-	cnt := mergeSort(nums, start, mid) + mergeSort(nums, mid + 1, end)
+	mid := start + (end-start)/2 // 防止start和end相加引起的数组越界
+	cnt := mergeSort(nums, start, mid) + mergeSort(nums, mid+1, end)
 	// 左右分别是排好序的数组
 	// cnt 是返回的逆序对的数量
 	var tmp []int
-	i, j := start, mid + 1
+	i, j := start, mid+1
 	// i是左边数组的指针，j是右边数组的指针
 	for i <= mid && j <= end { // 加判断防止越界
 		if nums[i] <= nums[j] {
@@ -618,7 +735,7 @@ func mergeSort(nums []int, start, end int) int {
 	}
 	// 将排好序的 tmp 拷贝到当前数组片段中
 	for i = start; i <= end; i++ {
-		nums[i] = tmp[i - start]
+		nums[i] = tmp[i-start]
 	}
 	return cnt
 }
@@ -630,7 +747,7 @@ func maxSubArray(nums []int) int {
 	res := -101
 	sum := 0
 	for _, k := range nums {
-		if sum < 0{
+		if sum < 0 {
 			sum = 0
 		}
 		sum += k
@@ -642,10 +759,11 @@ func maxSubArray(nums []int) int {
 }
 
 type TreeNode struct {
-    Val int
-    Left *TreeNode
-    Right *TreeNode
+	Val   int
+	Left  *TreeNode
+	Right *TreeNode
 }
+
 /***** 从前序与中序遍历序列构造二叉树 *****/
 // 给定一棵树的前序遍历 preorder 与中序遍历 inorder。
 // 请构造二叉树并返回其根节点。
@@ -669,7 +787,7 @@ func buildTree(preorder []int, inorder []int) *TreeNode {
 // 给你单链表的头指针 head 和两个整数 left 和 right ，其中 left <= right。
 // 请你反转从位置 left 到位置 right 的链表节点，返回 反转后的链表 。
 func reverseBetween(head *ListNode, left int, right int) *ListNode {
-	if head == nil || left <= 0 || left >= right{
+	if head == nil || left <= 0 || left >= right {
 		return head
 	}
 	ps := head
@@ -712,7 +830,7 @@ func reverseBetween(head *ListNode, left int, right int) *ListNode {
 // 删除一个字符
 // 替换一个字符
 func minDistance(word1 string, word2 string) int {
-	if len(word1) * len(word2) == 0 {
+	if len(word1)*len(word2) == 0 {
 		return len(word1) + len(word2)
 	}
 	dp := make([][]int, len(word1))
@@ -793,22 +911,22 @@ func numIslands(grid [][]byte) int {
 	return num
 }
 
-func dfs2(grid [][]byte, r int, c int)  {
+func dfs2(grid [][]byte, r int, c int) {
 	row := len(grid)
 	col := len(grid[0])
 
 	grid[r][c] = '0'
 
-	if r - 1 >= 0 && grid[r-1][c] == '1' {
+	if r-1 >= 0 && grid[r-1][c] == '1' {
 		dfs2(grid, r-1, c)
 	}
-	if r + 1 < row && grid[r+1][c] == '1' {
+	if r+1 < row && grid[r+1][c] == '1' {
 		dfs2(grid, r+1, c)
 	}
-	if c - 1 >= 0 && grid[r][c-1] == '1' {
+	if c-1 >= 0 && grid[r][c-1] == '1' {
 		dfs2(grid, r, c-1)
 	}
-	if c + 1 < col && grid[r][c+1] == '1' {
+	if c+1 < col && grid[r][c+1] == '1' {
 		dfs2(grid, r, c+1)
 	}
 }
@@ -870,11 +988,10 @@ func dailyTemperatures(T []int) []int {
 	return res
 }
 
-
 type LRUCache struct {
-	size int
-	capacity int
-	cache map[int]*DLinkedNode
+	size       int
+	capacity   int
+	cache      map[int]*DLinkedNode
 	head, tail *DLinkedNode
 }
 
@@ -885,7 +1002,7 @@ type DLinkedNode struct {
 
 func initDLinkedNode(key, value int) *DLinkedNode {
 	return &DLinkedNode{
-		key: key,
+		key:   key,
 		value: value,
 	}
 }
@@ -893,9 +1010,9 @@ func initDLinkedNode(key, value int) *DLinkedNode {
 // Constructor2 /***** LRU 缓存 *****/
 func Constructor2(capacity int) LRUCache {
 	l := LRUCache{
-		cache: map[int]*DLinkedNode{},
-		head: initDLinkedNode(0, 0),
-		tail: initDLinkedNode(0, 0),
+		cache:    map[int]*DLinkedNode{},
+		head:     initDLinkedNode(0, 0),
+		tail:     initDLinkedNode(0, 0),
 		capacity: capacity,
 	}
 	l.head.next = l.tail
@@ -912,7 +1029,7 @@ func (this *LRUCache) Get(key int) int {
 	return node.value
 }
 
-func (this *LRUCache) Put(key int, value int)  {
+func (this *LRUCache) Put(key int, value int) {
 	if _, ok := this.cache[key]; !ok {
 		node := initDLinkedNode(key, value)
 		this.cache[key] = node
@@ -961,7 +1078,9 @@ func (this *LRUCache) removeTail() *DLinkedNode {
 func levelOrder(root *TreeNode) [][]int {
 	var res [][]int
 
-	if root == nil { return res	}
+	if root == nil {
+		return res
+	}
 
 	queue := []*TreeNode{root}
 	res = append(res, []int{root.Val})
@@ -998,11 +1117,11 @@ func merge(intervals [][]int) [][]int {
 	var res [][]int
 	prev := intervals[0]
 
-	for i := 1; i < len(intervals); i++{
+	for i := 1; i < len(intervals); i++ {
 		cur := intervals[i]
 		// 上一个区间的结束位置 在 当前区间的开始位置的左边
 		// 说明没有一点重合
-		if prev[1] < cur[0]{
+		if prev[1] < cur[0] {
 			res = append(res, prev) // 直接将prev保存
 			prev = cur
 		} else {
@@ -1020,7 +1139,7 @@ func merge(intervals [][]int) [][]int {
 // 在坐标内画 n 条垂直线，垂直线 i 的两个端点分别为 (i, ai) 和 (i, 0)。
 // 找出其中的两条线，使得它们与 x 轴共同构成的容器可以容纳最多的水。
 func maxArea(height []int) int {
-	l, r := 0, len(height) - 1 // 双指针移动
+	l, r := 0, len(height)-1 // 双指针移动
 	store := 0
 	for l < r {
 		area := height[r]
@@ -1052,7 +1171,7 @@ func generateParenthesis(n int) []string {
 }
 
 // left 和 right 代表还需要添加几个左括号和几个右括号
-func add(res *[]string, str string, left int, right int){
+func add(res *[]string, str string, left int, right int) {
 	if left == 0 && right == 0 {
 		*res = append(*res, str)
 	}
@@ -1062,12 +1181,12 @@ func add(res *[]string, str string, left int, right int){
 		return
 	}
 	if left > 0 {
-		add(res, str + "(", left-1, right)
-		add(res, str + ")", left, right-1)
+		add(res, str+"(", left-1, right)
+		add(res, str+")", left, right-1)
 		return
 	}
 	if right > 0 {
-		add(res, str + ")", left, right-1)
+		add(res, str+")", left, right-1)
 	}
 }
 
@@ -1101,7 +1220,7 @@ func rightSideView(root *TreeNode) []int {
 		if right != math.MinInt32 {
 			res = append(res, right)
 		}
-		newQueue := make([]*TreeNode, len(queue) - qLen)
+		newQueue := make([]*TreeNode, len(queue)-qLen)
 		copy(newQueue, queue[qLen:])
 		queue = newQueue
 	}
@@ -1189,9 +1308,9 @@ func solveNQueens(n int) [][]string {
 		}
 		res = append(res, r)
 	}
-	cols := make([]bool, n)  // 记录访问过的列
-	corner1 := make(map[int]bool)  // 记录该左对角线
-	corner2 := make(map[int]bool)  // 记录该右对角线
+	cols := make([]bool, n)       // 记录访问过的列
+	corner1 := make(map[int]bool) // 记录该左对角线
+	corner2 := make(map[int]bool) // 记录该右对角线
 	var dfs func(row int)
 	dfs = func(row int) {
 		if row == n {
@@ -1207,7 +1326,7 @@ func solveNQueens(n int) [][]string {
 				cols[i] = true
 				corner1[i-row] = true
 				corner2[i+row] = true
-				dfs(row+1)  // 去下一行
+				dfs(row + 1) // 去下一行
 				matrix[row][i] = false
 				cols[i] = false
 				delete(corner1, i-row)
@@ -1247,8 +1366,8 @@ func zigzagLevelOrder(root *TreeNode) [][]int {
 		if len(nodes) != 0 {
 			queue = append(queue, nodes)
 		}
-		if level % 2 == 0{
-			for i := 0; i < len(values) / 2; i++ {
+		if level%2 == 0 {
+			for i := 0; i < len(values)/2; i++ {
 				values[i], values[len(values)-1-i] = values[len(values)-1-i], values[i]
 			}
 		}
@@ -1264,7 +1383,7 @@ func minArray(numbers []int) int {
 	right := len(numbers) - 1
 	// 类似二分查找的方法去寻找
 	for left < right {
-		pivot := left + (right-left) / 2 // 中点
+		pivot := left + (right-left)/2 // 中点
 		if numbers[pivot] < numbers[right] {
 			// 中点比 right 指向的值小
 			// 说明中点往右不存在最小值
@@ -1293,12 +1412,12 @@ func convert2(s string, numRows int) string {
 		return s
 	}
 	rows := make([]string, numRows)
-	n := 2 * numRows - 2 // 循环周期
+	n := 2*numRows - 2 // 循环周期
 	for i, char := range s {
 		x := i % n
 		// min(x, n - x) 是行号
 		// 将每行的字符拼接到一块
-		rows[min(x, n - x)] += string(char)
+		rows[min(x, n-x)] += string(char)
 	}
 	return strings.Join(rows, "")
 }
@@ -1319,7 +1438,7 @@ func maxProfit(prices []int) int {
 	big := prices[0]
 	small := big
 	for _, k := range prices {
-		if k - small > res {
+		if k-small > res {
 			res = k - small
 			continue
 		}
@@ -1369,13 +1488,13 @@ func maxPathSum(root *TreeNode) int {
 func threeSumClosest(nums []int, target int) int {
 	sort.Ints(nums)
 	var (
-		n = len(nums)
+		n    = len(nums)
 		best = math.MaxInt32
 	)
 
 	// 根据差值的绝对值来更新答案
 	update := func(cur int) {
-		if abs(cur - target) < abs(best - target) {
+		if abs(cur-target) < abs(best-target) {
 			best = cur
 		}
 	}
@@ -1387,7 +1506,7 @@ func threeSumClosest(nums []int, target int) int {
 			continue
 		}
 		// 使用双指针枚举 b 和 c
-		j, k := i + 1, n - 1
+		j, k := i+1, n-1
 		for j < k {
 			sum := nums[i] + nums[j] + nums[k]
 			// 如果和为 target 直接返回答案
@@ -1431,7 +1550,7 @@ func abs(x int) int {
 func restoreIpAddresses(s string) []string {
 	const SEG_COUNT = 4
 	var (
-		ans []string
+		ans      []string
 		segments []int
 	)
 	var dfs func(s string, segId, segStart int)
@@ -1442,7 +1561,7 @@ func restoreIpAddresses(s string) []string {
 				ipAddr := ""
 				for i := 0; i < SEG_COUNT; i++ {
 					ipAddr += strconv.Itoa(segments[i])
-					if i != SEG_COUNT - 1 {
+					if i != SEG_COUNT-1 {
 						ipAddr += "."
 					}
 				}
@@ -1458,15 +1577,15 @@ func restoreIpAddresses(s string) []string {
 		// 由于不能有前导零，如果当前数字为 0，那么这一段 IP 地址只能为 0
 		if s[segStart] == '0' {
 			segments[segId] = 0
-			dfs(s, segId + 1, segStart + 1)
+			dfs(s, segId+1, segStart+1)
 		}
 		// 一般情况，枚举每一种可能性并递归
 		addr := 0
 		for segEnd := segStart; segEnd < len(s); segEnd++ {
-			addr = addr * 10 + int(s[segEnd] - '0')
+			addr = addr*10 + int(s[segEnd]-'0')
 			if addr > 0 && addr <= 0xFF {
 				segments[segId] = addr
-				dfs(s, segId + 1, segEnd + 1)
+				dfs(s, segId+1, segEnd+1)
 			} else {
 				break
 			}
@@ -1525,7 +1644,7 @@ func sortArray(nums []int) []int {
 		return left
 	}
 
-	quickSort(0, len(nums) - 1)
+	quickSort(0, len(nums)-1)
 
 	return nums
 }
@@ -1535,10 +1654,10 @@ func sortArray(nums []int) []int {
 // 找出给定目标值在数组中的开始位置和结束位置。
 // 如果数组中不存在目标值 target，返回 [-1, -1]。
 func searchRange(nums []int, target int) []int {
-	left, right := 0, len(nums) - 1
+	left, right := 0, len(nums)-1
 	var mid int
 	for left < right {
-		mid = left + (right - left) / 2
+		mid = left + (right-left)/2
 		if nums[mid] < target {
 			left = mid + 1 // 不加 1 可能死循环
 		} else if nums[mid] > target {
@@ -1548,8 +1667,8 @@ func searchRange(nums []int, target int) []int {
 		}
 	}
 	/* 注意 */
-	mid = left + (right - left) / 2
-	if len(nums) == 0 || mid < 0 || mid - 1 > len(nums) || nums[mid] != target {
+	mid = left + (right-left)/2
+	if len(nums) == 0 || mid < 0 || mid-1 > len(nums) || nums[mid] != target {
 		return []int{-1, -1}
 	}
 	/* --- */
@@ -1557,7 +1676,7 @@ func searchRange(nums []int, target int) []int {
 	for res[0] > 0 && nums[res[0]-1] == target {
 		res[0]--
 	}
-	for res[1] < len(nums) - 1 && nums[res[1]+1] == target {
+	for res[1] < len(nums)-1 && nums[res[1]+1] == target {
 		res[1]++
 	}
 	return res
@@ -1568,7 +1687,7 @@ func searchRange2(nums []int, target int) []int {
 	if leftmost == len(nums) || nums[leftmost] != target {
 		return []int{-1, -1}
 	}
-	rightmost := sort.SearchInts(nums, target + 1) - 1
+	rightmost := sort.SearchInts(nums, target+1) - 1
 	return []int{leftmost, rightmost}
 }
 
@@ -1580,11 +1699,11 @@ func searchRange2(nums []int, target int) []int {
 // 数独部分空格内已填入了数字，空白格用 '.' 表示。
 func isValidSudoku(board [][]byte) bool {
 	// 行列检测
-	for i:=0;i<9;i++ {
+	for i := 0; i < 9; i++ {
 		mp1 := map[byte]bool{}
 		mp2 := map[byte]bool{}
 		mp3 := map[byte]bool{}
-		for j:=0;j<9;j++ {
+		for j := 0; j < 9; j++ {
 			// row
 			if board[i][j] != '.' {
 				if mp1[board[i][j]] {
@@ -1655,7 +1774,9 @@ func flatten(root *TreeNode) {
 	var lastNode *TreeNode
 	var dfs func(*TreeNode)
 	dfs = func(node *TreeNode) {
-		if node == nil { return }
+		if node == nil {
+			return
+		}
 		if lastNode != nil {
 			lastNode.Right = node
 			lastNode.Left = nil
@@ -1678,7 +1799,7 @@ func hammingDistance(x int, y int) int {
 	xor := x ^ y
 	res := 0
 	for xor != 0 {
-		if xor % 2 == 1 {
+		if xor%2 == 1 {
 			res++
 		}
 		xor >>= 1
@@ -1723,16 +1844,16 @@ func findAnagrams2(s string, p string) []int {
 
 /***** 会议室 II *****/
 func minMeetingRooms(intervals [][]int) int {
-	nums := make([]int, 0, 2 * len(intervals))
+	nums := make([]int, 0, 2*len(intervals))
 	for _, v := range intervals {
-		nums = append(nums, v[0] * 10 + 2)
-		nums = append(nums, v[1] * 10 + 1)
+		nums = append(nums, v[0]*10+2)
+		nums = append(nums, v[1]*10+1)
 	}
 	sort.Ints(nums)
 	maxRoom := 0
 	curNeedRoom := 0
 	for _, v := range nums {
-		if v % 10 == 1 {
+		if v%10 == 1 {
 			curNeedRoom--
 		} else {
 			curNeedRoom++
@@ -1751,7 +1872,7 @@ func validPalindrome(s string) bool {
 		if len(s) < 2 {
 			return true
 		}
-		i, j := 0, len(s) - 1
+		i, j := 0, len(s)-1
 		for i < j {
 			if s[i] == s[j] {
 				i++
@@ -1772,9 +1893,13 @@ func validPalindrome(s string) bool {
 // 一个机器人每次只能向下或者向右移动一步
 func minPathSum(grid [][]int) int {
 	row := len(grid)
-	if row < 2 { return 0 }
+	if row < 2 {
+		return 0
+	}
 	col := len(grid)
-	if col < 2 { return 0 }
+	if col < 2 {
+		return 0
+	}
 
 	for r := 1; r < row; r++ {
 		grid[r][0] += grid[r-1][0]
@@ -1803,9 +1928,13 @@ func minPathSum(grid [][]int) int {
 /***** 矩阵中最大的矩形 *****/
 func maximalRectangle0(matrix [][]byte) int {
 	row := len(matrix)
-	if row == 0 {return 0}
+	if row == 0 {
+		return 0
+	}
 	col := len(matrix[0])
-	if col == 0 {return 0}
+	if col == 0 {
+		return 0
+	}
 
 	dp := make([][]int, row)
 	// 保存的是左边有几个连续的 1
@@ -1834,7 +1963,7 @@ func maximalRectangle0(matrix [][]byte) int {
 				if w == 0 {
 					break
 				}
-				res = max(res, w * (i-k+1))
+				res = max(res, w*(i-k+1))
 			}
 		}
 	}
@@ -1846,7 +1975,7 @@ func maximalRectangle0(matrix [][]byte) int {
 func getSum(a, b int) int {
 	for a != 0 {
 		temp := a ^ b
-		a = (a&b) << 1
+		a = (a & b) << 1
 		b = temp
 	}
 	return b
@@ -1865,7 +1994,7 @@ func maxProduct(words []string) int {
 	res := 0
 	for i := 0; i < len(words); i++ {
 		for j := i + 1; j < len(words); j++ {
-			if bitmap[i] & bitmap[j] == 0 {
+			if bitmap[i]&bitmap[j] == 0 {
 				mul := len(words[i]) * len(words[j])
 				if mul > res {
 					res = mul
@@ -1884,11 +2013,11 @@ func minSubArrayLen(target int, nums []int) int {
 	for right := 0; right < len(nums); right++ {
 		sum += nums[right]
 		if sum >= target {
-			for sum - nums[left] >= target {
+			for sum-nums[left] >= target {
 				sum -= nums[left]
 				left++
 			}
-			if right - left + 1 < res {
+			if right-left+1 < res {
 				res = right - left
 			}
 		}
@@ -1932,7 +2061,7 @@ func subarraySum(nums []int, k int) int {
 	bitmap[0] = 1
 	for _, v := range nums {
 		sum += v
-		if count, ok := bitmap[sum - k]; ok {
+		if count, ok := bitmap[sum-k]; ok {
 			// 从当前位置往前看，sum - k 出现了几次
 			res += count
 		}
@@ -1991,7 +2120,7 @@ func findMaxLength(nums []int) int {
 			continue
 		}
 		k, ok = offsetMap[offset]
-		if ok && i - k > res {
+		if ok && i-k > res {
 			res = i - k
 		}
 		if !ok {
@@ -2006,13 +2135,13 @@ func countSubstrings(s string) int {
 	res := 0
 	for i := 0; i < len(s); i++ {
 		left, right := i, i
-		for left - 1 >= 0 && right + 1 < len(s) &&
+		for left-1 >= 0 && right+1 < len(s) &&
 			s[left-1] == s[right+1] {
 			left--
 			right++
 		}
-		res += (right - left) / 2 + 1
-		left, right = i - 1, i
+		res += (right-left)/2 + 1
+		left, right = i-1, i
 		for left >= 0 && right < len(s) &&
 			s[left] == s[right] {
 			left--
@@ -2025,7 +2154,9 @@ func countSubstrings(s string) int {
 
 /***** 含有所有字符的最短字符串 *****/
 func minWindow(s string, t string) string {
-	if len(t) > len(s) {return ""}
+	if len(t) > len(s) {
+		return ""
+	}
 	count := 'z' - 'A' + 1
 	// nums 用来存储哪些字母还不够
 	nums := make([]int, count)
@@ -2046,7 +2177,7 @@ func minWindow(s string, t string) string {
 
 	left := 0
 	for right := 0; right < len(s); right++ {
-		k := int(s[right]-'A')
+		k := int(s[right] - 'A')
 		if used[k] == false {
 			continue
 		}
@@ -2055,11 +2186,11 @@ func minWindow(s string, t string) string {
 			status--
 		}
 		if status == 0 {
-			for !used[int(s[left]-'A')] || nums[int(s[left])-'A'] - 1 >= 0 {
+			for !used[int(s[left]-'A')] || nums[int(s[left])-'A']-1 >= 0 {
 				nums[int(s[left])-'A']--
 				left++
 			}
-			if right - left + 1 < len(res) || len(res) == 0 {
+			if right-left+1 < len(res) || len(res) == 0 {
 				res = s[left:right]
 			}
 		}
@@ -2090,10 +2221,10 @@ func detectCycle(head *ListNode) *ListNode {
 }
 
 type Node struct {
-    Val int
-    Next *Node
+	Val   int
+	Next  *Node
 	Child *Node
-    Prev *Node
+	Prev  *Node
 }
 
 /***** 排序的循环链表 *****/
@@ -2162,8 +2293,8 @@ func flatten2(root *Node) *Node {
 }
 
 type RandomizedSet struct {
-	nums []int  // 用于随机访问
-	M map[int]int  // 实现O(1)的访问和删除
+	nums []int       // 用于随机访问
+	M    map[int]int // 实现O(1)的访问和删除
 	rand *rand.Rand  // 随机数种子
 }
 
