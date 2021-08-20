@@ -1020,53 +1020,53 @@ func Constructor2(capacity int) LRUCache {
 	return l
 }
 
-func (this *LRUCache) Get(key int) int {
-	if _, ok := this.cache[key]; !ok {
+func (r *LRUCache) Get(key int) int {
+	if _, ok := r.cache[key]; !ok {
 		return -1
 	}
-	node := this.cache[key]
-	this.moveToHead(node)
+	node := r.cache[key]
+	r.moveToHead(node)
 	return node.value
 }
 
-func (this *LRUCache) Put(key int, value int) {
-	if _, ok := this.cache[key]; !ok {
+func (r *LRUCache) Put(key int, value int) {
+	if _, ok := r.cache[key]; !ok {
 		node := initDLinkedNode(key, value)
-		this.cache[key] = node
-		this.addToHead(node)
-		this.size++
-		if this.size > this.capacity {
-			removed := this.removeTail()
-			delete(this.cache, removed.key)
-			this.size--
+		r.cache[key] = node
+		r.addToHead(node)
+		r.size++
+		if r.size > r.capacity {
+			removed := r.removeTail()
+			delete(r.cache, removed.key)
+			r.size--
 		}
 	} else {
-		node := this.cache[key]
+		node := r.cache[key]
 		node.value = value
-		this.moveToHead(node)
+		r.moveToHead(node)
 	}
 }
 
-func (this *LRUCache) addToHead(node *DLinkedNode) {
-	node.prev = this.head
-	node.next = this.head.next
-	this.head.next.prev = node
-	this.head.next = node
+func (r *LRUCache) addToHead(node *DLinkedNode) {
+	node.prev = r.head
+	node.next = r.head.next
+	r.head.next.prev = node
+	r.head.next = node
 }
 
-func (this *LRUCache) removeNode(node *DLinkedNode) {
+func (r *LRUCache) removeNode(node *DLinkedNode) {
 	node.prev.next = node.next
 	node.next.prev = node.prev
 }
 
-func (this *LRUCache) moveToHead(node *DLinkedNode) {
-	this.removeNode(node)
-	this.addToHead(node)
+func (r *LRUCache) moveToHead(node *DLinkedNode) {
+	r.removeNode(node)
+	r.addToHead(node)
 }
 
-func (this *LRUCache) removeTail() *DLinkedNode {
-	node := this.tail.prev
-	this.removeNode(node)
+func (r *LRUCache) removeTail() *DLinkedNode {
+	node := r.tail.prev
+	r.removeNode(node)
 	return node
 }
 
@@ -1548,7 +1548,7 @@ func abs(x int) int {
 // 返回所有可能从 s 获得的 有效 IP 地址。
 // 你可以按任何顺序返回答案。
 func restoreIpAddresses(s string) []string {
-	const SEG_COUNT = 4
+	const SegCount = 4
 	var (
 		ans      []string
 		segments []int
@@ -1556,12 +1556,12 @@ func restoreIpAddresses(s string) []string {
 	var dfs func(s string, segId, segStart int)
 	dfs = func(s string, segId, segStart int) {
 		// 如果找到了 4 段 IP 地址并且遍历完了字符串，那么就是一种答案
-		if segId == SEG_COUNT {
+		if segId == SegCount {
 			if segStart == len(s) {
 				ipAddr := ""
-				for i := 0; i < SEG_COUNT; i++ {
+				for i := 0; i < SegCount; i++ {
 					ipAddr += strconv.Itoa(segments[i])
-					if i != SEG_COUNT-1 {
+					if i != SegCount-1 {
 						ipAddr += "."
 					}
 				}
@@ -1592,7 +1592,7 @@ func restoreIpAddresses(s string) []string {
 		}
 	}
 
-	segments = make([]int, SEG_COUNT)
+	segments = make([]int, SegCount)
 	ans = []string{}
 	dfs(s, 0, 0)
 	return ans
@@ -2095,10 +2095,10 @@ func Constructor1(matrix [][]int) NumMatrix {
 }
 
 // SumRegion 返回左上角 (row1, col1) 、右下角 (row2, col2) 的子矩阵的元素总和。
-func (this *NumMatrix) SumRegion(row1 int, col1 int, row2 int, col2 int) int {
+func (nm *NumMatrix) SumRegion(row1 int, col1 int, row2 int, col2 int) int {
 	// 画图表示好理解些
-	return this.preSums[row2+1][col2+1] - this.preSums[row1][col2+1] -
-		this.preSums[row2+1][col1] + this.preSums[row1][col1]
+	return nm.preSums[row2+1][col2+1] - nm.preSums[row1][col2+1] -
+		nm.preSums[row2+1][col1] + nm.preSums[row1][col1]
 }
 
 /***** 0 和 1 个数相同的子数组 *****/
@@ -2305,32 +2305,58 @@ func Constructor() RandomizedSet {
 	return r
 }
 
-func (this *RandomizedSet) Insert(val int) bool {
-	if _, ok := this.M[val]; ok {
+func (r *RandomizedSet) Insert(val int) bool {
+	if _, ok := r.M[val]; ok {
 		return false
 	}
-	this.M[val] = len(this.nums)
-	this.nums = append(this.nums, val)
+	r.M[val] = len(r.nums)
+	r.nums = append(r.nums, val)
 	return true
 }
 
-func (this *RandomizedSet) Remove(val int) bool {
-	if _, ok := this.M[val]; !ok {
+func (r *RandomizedSet) Remove(val int) bool {
+	if _, ok := r.M[val]; !ok {
 		return false
 	}
 	// 将当前值和数组末尾值互换位置再删除
-	index := this.M[val]
-	t := this.nums[len(this.nums)-1]
-	this.nums[index] = t
-	this.M[t] = index
+	index := r.M[val]
+	t := r.nums[len(r.nums)-1]
+	r.nums[index] = t
+	r.M[t] = index
 
-	delete(this.M, val)
-	this.nums = this.nums[:len(this.nums)-1]
+	delete(r.M, val)
+	r.nums = r.nums[:len(r.nums)-1]
 	return true
 }
 
-func (this *RandomizedSet) GetRandom() int {
-	index := this.rand.Intn(len(this.nums))
-	return this.nums[index]
+func (r *RandomizedSet) GetRandom() int {
+	index := r.rand.Intn(len(r.nums))
+	return r.nums[index]
 }
 
+/***** 二叉树剪枝 *****/
+// 给定一个二叉树 根节点 root ，树的每个节点的值要么是 0，要么是 1。
+// 请剪除该二叉树中所有节点的值为 0 的子树。
+//节点 node 的子树为 node 本身，以及所有 node 的后代。
+func pruneTree(root *TreeNode) *TreeNode {
+	var dfs func(*TreeNode) bool
+	dfs = func(nd *TreeNode) bool {
+		if nd == nil {
+			return true
+		}
+		l := dfs(nd.Left)
+		r := dfs(nd.Right)
+		if l {
+			nd.Left = nil
+		}
+		if r {
+			nd.Right = nil
+		}
+		return l && r && nd.Val == 0
+	}
+	dfs(root)
+	if root != nil && root.Val == 0 && root.Left == nil && root.Right == nil {
+		return nil
+	}
+	return root
+}
