@@ -1456,12 +1456,6 @@ func maxPathSum(root *TreeNode) int {
 	}
 
 	maxSum := math.MinInt64
-	if root.Left != nil {
-		maxSum = root.Left.Val
-	}
-	if root.Right != nil {
-		maxSum = root.Right.Val
-	}
 
 	var dfsPath func(*TreeNode) int
 	dfsPath = func(root *TreeNode) int {
@@ -2360,3 +2354,64 @@ func pruneTree(root *TreeNode) *TreeNode {
 	}
 	return root
 }
+
+/***** 最长递增路径 *****/
+func longestIncreasingPath(matrix [][]int) int {
+	res := 1 // res最小为1
+	row := len(matrix)
+	col := len(matrix[0])
+
+	// dp数组，每个元素表示当前点开始所能构成的最长路径
+	bitmap := make([][]int, row)
+	for i := range matrix {
+		bitmap[i] = make([]int, col)
+	}
+
+	directions := [][]int{[]int{1, 0}, []int{0, 1}, []int{-1, 0}, []int{0, -1}}
+
+	isValid := func(r, c int) bool {
+		if r < 0 || r >= row || c < 0 || c >= col {
+			return false
+		}
+		return true
+	}
+
+	var dfs func(r, c, step int) int
+
+	dfs = func(r, c, step int) int {
+		// 判断该处是否走过
+		if bitmap[r][c] > 0 {
+			// 构成最大路径大于res进行更新
+			if bitmap[r][c] > res - step {
+				res = step + bitmap[r][c]
+			}
+			// 走过无需再走
+			return bitmap[r][c]
+		}
+
+		step += 1 // 该点默认能到达
+
+		if step > res {
+			res = step
+		}
+		newStep := 0 // 新走的最长路径
+		for _, d := range directions {
+			if isValid(r+d[0], c+d[1]) && matrix[r+d[0]][c+d[1]] > matrix[r][c] {
+				newStep = max(newStep, dfs(r+d[0], c+d[1], step))
+			}
+		}
+		newStep++ // 考虑当前点
+		bitmap[r][c] = newStep
+		return newStep
+	}
+
+	// 对所有点扫描一遍
+	for r := range matrix {
+		for c := range matrix[0] {
+			dfs(r, c, 0)
+		}
+	}
+
+	return res
+}
+
