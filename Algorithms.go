@@ -2415,3 +2415,49 @@ func longestIncreasingPath(matrix [][]int) int {
 	return res
 }
 
+/***** 优势洗牌 *****/
+// 给定两个大小相等的数组 A 和 B，A 相对于 B 的优势可以用满足 A[i] > B[i] 的索引 i 的数目来描述。
+// 返回 A 的任意排列，使其相对于 B 的优势最大化。
+func advantageCount(nums1 []int, nums2 []int) []int {
+	indexs2 := make([]int, len(nums1))
+	for i := range nums1 {
+		indexs2[i] = i
+	}
+	sort.Ints(nums1)
+	sort.Slice(indexs2, func(i, j int) bool {
+		return nums2[indexs2[i]] < nums2[indexs2[j]]
+	})
+
+	left1, left2 := 0, 0
+	res := make([]int,len(nums1))
+	for left2 < len(nums2) {
+		v2 := nums2[indexs2[left2]]
+		ok := false
+		for left1 < len(nums1) {
+			if nums1[left1] > v2 {
+				res[indexs2[left2]] = nums1[left1]
+				nums1[left1] = -1
+				ok = true
+				break
+			}
+			left1++
+		}
+		if !ok {
+			res[indexs2[left2]] = -1
+		}
+		left2++
+	}
+
+	j := 0
+	for i, v := range res {
+		if v != -1 {
+			continue
+		}
+		for nums1[j] == -1 {
+			j++
+		}
+		res[i] = nums1[j]
+		j++
+	}
+	return res
+}
