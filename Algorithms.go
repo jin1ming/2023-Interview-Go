@@ -2461,3 +2461,30 @@ func advantageCount(nums1 []int, nums2 []int) []int {
 	}
 	return res
 }
+
+/***** 字典序排数 *****/
+// 给定一个整数 n, 返回从 1 到 n 的字典顺序。
+// 例如，给定 n =1 3，
+// 返回 [1,10,11,12,13,2,3,4,5,6,7,8,9] 。
+func lexicalOrder(n int) []int {
+	if n <= 0 { return nil }
+	res := make([]int, 0, n)
+
+	var dfs func(int)
+	dfs = func(i int) {
+		if i > n { return }
+		res = append(res, i)
+		if 10*i <= n {
+			// 优先10倍扩展
+			dfs(10*i)
+		}
+		// 当前尾数i是9, i+1已经被添加
+		if (i+1)%10 == 0 {
+			return
+		}
+		// 递增
+		dfs(i+1)
+	}
+	dfs(1)
+	return res
+}
