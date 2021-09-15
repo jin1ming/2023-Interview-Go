@@ -2488,3 +2488,20 @@ func lexicalOrder(n int) []int {
 	dfs(1)
 	return res
 }
+
+/***** 字典序排数 *****/
+// 先排序，再比较首尾两个字符串
+func longestCommonPrefix(strs []string) string {
+	sort.Strings(strs)
+	end := 0
+	minLen := len(strs[0])
+	if len(strs[len(strs)-1]) < minLen {
+		minLen = len(strs[len(strs)-1])
+	}
+	for ; end < minLen; end++ {
+		if strs[0][end] != strs[len(strs)-1][end] {
+			break
+		}
+	}
+	return strs[0][:end]
+}
