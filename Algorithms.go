@@ -2382,7 +2382,7 @@ func longestIncreasingPath(matrix [][]int) int {
 		// 判断该处是否走过
 		if bitmap[r][c] > 0 {
 			// 构成最大路径大于res进行更新
-			if bitmap[r][c] > res - step {
+			if bitmap[r][c] > res-step {
 				res = step + bitmap[r][c]
 			}
 			// 走过无需再走
@@ -2429,7 +2429,7 @@ func advantageCount(nums1 []int, nums2 []int) []int {
 	})
 
 	left1, left2 := 0, 0
-	res := make([]int,len(nums1))
+	res := make([]int, len(nums1))
 	for left2 < len(nums2) {
 		v2 := nums2[indexs2[left2]]
 		ok := false
@@ -2467,23 +2467,27 @@ func advantageCount(nums1 []int, nums2 []int) []int {
 // 例如，给定 n =1 3，
 // 返回 [1,10,11,12,13,2,3,4,5,6,7,8,9] 。
 func lexicalOrder(n int) []int {
-	if n <= 0 { return nil }
+	if n <= 0 {
+		return nil
+	}
 	res := make([]int, 0, n)
 
 	var dfs func(int)
 	dfs = func(i int) {
-		if i > n { return }
+		if i > n {
+			return
+		}
 		res = append(res, i)
 		if 10*i <= n {
 			// 优先10倍扩展
-			dfs(10*i)
+			dfs(10 * i)
 		}
 		// 当前尾数i是9, i+1已经被添加
 		if (i+1)%10 == 0 {
 			return
 		}
 		// 递增
-		dfs(i+1)
+		dfs(i + 1)
 	}
 	dfs(1)
 	return res
@@ -2504,4 +2508,63 @@ func longestCommonPrefix(strs []string) string {
 		}
 	}
 	return strs[0][:end]
+}
+
+/***** 计数质数 *****/
+// 统计所有小于非负整数 n 的质数的数量。
+func countPrimes(n int) (cnt int) {
+	isPrime := make([]bool, n)
+	for i := range isPrime {
+		isPrime[i] = true
+	}
+	for i := 2; i < n; i++ {
+		if isPrime[i] {
+			cnt++
+			for j := 2 * i; j < n; j += i {
+				isPrime[j] = false
+			}
+		}
+	}
+	return
+}
+
+/***** 用 Rand7() 实现 Rand10() *****/
+// 方式一
+func rand7() int {
+	return 0
+}
+func rand10() int {
+	for {
+		row := rand7()
+		col := rand7()
+		idx := (row-1)*7 + col
+		if idx <= 40 {
+			return 1 + (idx-1)%10
+		}
+	}
+}
+
+// 方式二
+func rand10B() int {
+	a := rand5()
+	b := rand2()
+	if b == 1 {
+		return a
+	} else {
+		return 5 + rand5()
+	}
+}
+func rand2() int {
+	t := rand7()
+	for t == 7 {
+		t = rand7()
+	}
+	return t % 2
+}
+func rand5() int {
+	t := rand7()
+	for t > 5 {
+		t = rand7()
+	}
+	return t
 }
