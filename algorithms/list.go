@@ -1,6 +1,6 @@
 package algorithms
 
-// 上一次学习：2022.2.24，完成
+// 上一次学习：2022.2.24，看到174行
 
 type ListNode struct {
 	Val  int
@@ -138,6 +138,7 @@ func getKthFromEnd(head *ListNode, k int) *ListNode {
 }
 
 /***** 链表中环的入口节点 *****/
+// https://leetcode-cn.com/problems/c32eOV/solution/tu-jie-kuai-man-zhi-zhen-ji-qiao-yuan-li-rdih/
 func detectCycle(head *ListNode) *ListNode {
 	if head == nil || head.Next == nil {
 		return nil
@@ -151,6 +152,10 @@ func detectCycle(head *ListNode) *ListNode {
 		}
 		fast = fast.Next.Next
 	}
+	// 快指针走了2k步，慢指针走了k步
+	// 多出来的k步，就是n倍的环周长
+	// 假定环入口到相遇点距离为：m，那么：
+	// head到环入口的距离是k-m，相遇位置再走k-m步，便可以到达环入口
 	slow = head
 	for slow != fast {
 		slow = slow.Next
@@ -166,6 +171,7 @@ type Node struct {
 	Prev  *Node
 }
 
+//TODO: 看到了这里
 /***** 排序的循环链表 *****/
 // 给定循环升序列表中的一个点，写一个函数向这个列表中插入一个新元素 insertVal ，使这个列表仍然是循环升序的。
 // 给定的可以是这个列表中任意一个顶点的指针，并不一定是这个列表中最小元素的指针。
