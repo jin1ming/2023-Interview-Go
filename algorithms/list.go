@@ -1,5 +1,7 @@
 package algorithms
 
+// 上一次学习：2022.2.24，完成
+
 type ListNode struct {
 	Val  int
 	Next *ListNode
@@ -7,103 +9,88 @@ type ListNode struct {
 
 /***** 反转链表 *****/
 func reverseList(head *ListNode) *ListNode {
-	var root *ListNode
-	var tmp *ListNode
-
+	var pre *ListNode
 	for head != nil {
-		tmp = head.Next
-		head.Next = root
-		root = head
-		head = tmp
+		next := head.Next
+		head.Next = pre
+		pre = head
+		head = next
 	}
-	return root
+	return pre
 }
 
 /***** 重排链表 *****/
 //给定一个单链表 L：L0→L1→…→Ln-1→Ln ，
 //将其重新排列后变为： L0→Ln→L1→Ln-1→L2→Ln-2→…
-//你不能只是单纯的改变节点内部的值，而是需要实际的进行节点交换。
+//你不能只是单纯地改变节点内部的值，而是需要实际的进行节点交换。
 func reorderList(head *ListNode) {
 	if head == nil {
 		return
 	}
-	length := 0
-
-	p := head
-
-	for p != nil {
-		length += 1
-		p = p.Next
-	}
-	p = head
-	for i := 1; i < (length+1)/2; i++ {
-		p = p.Next
-	}
-
-	head2 := p.Next
-	p.Next = nil
-	// 将后半段逆转
-	head2 = reverse(head2)
-
-	p = head
-	// 依次插入
-	var tmp *ListNode
-	for p != nil && head2 != nil {
-		tmp = p.Next
-		p.Next = head2
-		head2 = head2.Next
-		p = p.Next
-		p.Next = tmp
-		p = p.Next
-	}
+	mid := middleNode(head)
+	l1 := head
+	l2 := mid.Next
+	mid.Next = nil
+	l2 = reverseList(l2)
+	mergeList(l1, l2)
 }
 
-func reverse(head *ListNode) *ListNode {
-	var tmp *ListNode
-	var root *ListNode
-	for head != nil {
-		tmp = head.Next
-		head.Next = root
-		root = head
-		head = tmp
+func middleNode(head *ListNode) *ListNode {
+	slow, fast := head, head
+	for fast.Next != nil && fast.Next.Next != nil {
+		slow = slow.Next
+		fast = fast.Next.Next
 	}
-	return root
+	return slow
+}
+
+func mergeList(l1, l2 *ListNode) {
+	var l1Tmp, l2Tmp *ListNode
+	for l1 != nil && l2 != nil {
+		l1Tmp = l1.Next
+		l2Tmp = l2.Next
+
+		l1.Next = l2
+		l1 = l1Tmp
+
+		l2.Next = l1
+		l2 = l2Tmp
+	}
 }
 
 /***** K 个一组翻转链表 *****/
-//给你一个链表，每 k 个节点一组进行翻转，请你返回翻转后的链表。
-//k 是一个正整数，它的值小于或等于链表的长度。
-//如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
+// 给你一个链表，每 k 个节点一组进行翻转，请你返回翻转后的链表。
+// k 是一个正整数，它的值小于或等于链表的长度。
+// 如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
 func reverseKGroup(head *ListNode, k int) *ListNode {
-	hair := &ListNode{Next: head}
-	pre := hair
+	dummyHead := &ListNode{Next: head}
+	lastEnd := dummyHead
 
+out:
 	for head != nil {
-		tail := pre
-		for i := 0; i < k; i++ {
+		tail := head
+		for i := 0; i < k-1; i++ {
 			tail = tail.Next
 			if tail == nil {
-				return hair.Next
+				break out
 			}
 		}
-		nex := tail.Next
-		head, tail = myReverse(head, tail)
-		pre.Next = head
-		tail.Next = nex
-		pre = tail
-		head = tail.Next
+		lastEnd.Next, lastEnd = myReverse(head, tail)
+		head = lastEnd.Next
 	}
-	return hair.Next
+	return dummyHead.Next
 }
 
 func myReverse(head, tail *ListNode) (*ListNode, *ListNode) {
-	prev := tail.Next
+	end := tail.Next
+	prev := end
+
 	p := head
-	for prev != tail {
-		nex := p.Next
+	for p != end {
+		next := p.Next
 		p.Next = prev
 		prev = p
-		p = nex
+		p = next
 	}
 	return tail, head
 }
@@ -115,37 +102,25 @@ func reverseBetween(head *ListNode, left int, right int) *ListNode {
 	if head == nil || left <= 0 || left >= right {
 		return head
 	}
-	ps := head
-	m := 2
-	for m < left {
-		m++
-		ps = ps.Next
+
+	// 找需要翻转的开始节点和结束节点
+	right = right - left + 1
+	dummyHead := &ListNode{Next: head}
+	preNode := dummyHead
+	for left > 1 {
+		left--
+		preNode = preNode.Next
+	}
+	endNode := preNode
+	for right > 0 {
+		right--
+		endNode = endNode.Next
 	}
 
-	var tmp, head2, q *ListNode
-	if left == 1 {
-		q = ps
-		m--
-	} else {
-		q = ps.Next
-	}
-	tail := q
+	h, _ := myReverse(preNode.Next, endNode)
+	preNode.Next = h
 
-	for m = m - 1; m < right && q != nil; m++ {
-		tmp = q.Next
-		q.Next = head2
-		head2 = q
-		q = tmp
-	}
-
-	if tail != nil {
-		tail.Next = q
-	}
-	if left == 1 {
-		return head2
-	}
-	ps.Next = head2
-	return head
+	return dummyHead.Next
 }
 
 /***** 链表中倒数第k个节点 *****/
@@ -160,50 +135,6 @@ func getKthFromEnd(head *ListNode, k int) *ListNode {
 		slow = slow.Next
 	}
 	return slow
-}
-
-/***** 链表中倒数第k个节点 *****/
-// 给你一个由 '1'（陆地）和 '0'（水）组成的的二维网格，请你计算网格中岛屿的数量。
-// 岛屿总是被水包围，并且每座岛屿只能由水平方向和/或竖直方向上相邻的陆地连接形成。
-// 此外，你可以假设该网格的四条边均被水包围。
-func numIslands(grid [][]byte) int {
-	row := len(grid)
-	if row == 0 {
-		return 0
-	}
-	col := len(grid[0])
-	num := 0
-
-	for r := 0; r < row; r++ {
-		for c := 0; c < col; c++ {
-			if grid[r][c] == '1' {
-				// 找到一个陆地
-				num++
-				dfs2(grid, r, c) // 让该陆地变成水
-			}
-		}
-	}
-	return num
-}
-
-func dfs2(grid [][]byte, r int, c int) {
-	row := len(grid)
-	col := len(grid[0])
-
-	grid[r][c] = '0'
-
-	if r-1 >= 0 && grid[r-1][c] == '1' {
-		dfs2(grid, r-1, c)
-	}
-	if r+1 < row && grid[r+1][c] == '1' {
-		dfs2(grid, r+1, c)
-	}
-	if c-1 >= 0 && grid[r][c-1] == '1' {
-		dfs2(grid, r, c-1)
-	}
-	if c+1 < col && grid[r][c+1] == '1' {
-		dfs2(grid, r, c+1)
-	}
 }
 
 /***** 链表中环的入口节点 *****/

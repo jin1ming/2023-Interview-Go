@@ -1,5 +1,6 @@
 package algorithms
 
+// 上一次学习：2022.2.24
 import (
 	"strconv"
 	"strings"
@@ -43,6 +44,7 @@ func dfs1(nums []int, length int, depth int, path []int, used []bool, res *[][]i
 // 设计一种算法，打印 N 皇后在 N × N 棋盘上的各种摆法，
 // 其中每个皇后都不同行、不同列，也不在对角线上。
 // 这里的“对角线”指的是所有的对角线，不只是平分整个棋盘的那两条对角线。
+// PS: 注意，需要按行放置，一行放一个
 func solveNQueens(n int) [][]string {
 	var res [][]string
 	matrix := make([][]bool, n)
@@ -75,8 +77,8 @@ func solveNQueens(n int) [][]string {
 			resAdd()
 			return
 		}
-		for i, v := range matrix[row] {
-			if v == false && cols[i] == false && corner1[i-row] == false && corner2[i+row] == false {
+		for i := range matrix[row] {
+			if cols[i] == false && corner1[i-row] == false && corner2[i+row] == false {
 				if row > 0 && matrix[row][i] {
 					continue
 				}
@@ -149,4 +151,48 @@ func restoreIpAddresses(s string) []string {
 	ans = []string{}
 	dfs(s, 0, 0)
 	return ans
+}
+
+/***** 岛屿数量 *****/
+// 给你一个由 '1'（陆地）和 '0'（水）组成的的二维网格，请你计算网格中岛屿的数量。
+// 岛屿总是被水包围，并且每座岛屿只能由水平方向和/或竖直方向上相邻的陆地连接形成。
+// 此外，你可以假设该网格的四条边均被水包围。
+func numIslands(grid [][]byte) int {
+	row := len(grid)
+	if row == 0 {
+		return 0
+	}
+	col := len(grid[0])
+	num := 0
+
+	for r := 0; r < row; r++ {
+		for c := 0; c < col; c++ {
+			if grid[r][c] == '1' {
+				// 找到一个陆地
+				num++
+				dfs2(grid, r, c) // 让该陆地变成水
+			}
+		}
+	}
+	return num
+}
+
+func dfs2(grid [][]byte, r int, c int) {
+	row := len(grid)
+	col := len(grid[0])
+
+	grid[r][c] = '0'
+
+	if r-1 >= 0 && grid[r-1][c] == '1' {
+		dfs2(grid, r-1, c)
+	}
+	if r+1 < row && grid[r+1][c] == '1' {
+		dfs2(grid, r+1, c)
+	}
+	if c-1 >= 0 && grid[r][c-1] == '1' {
+		dfs2(grid, r, c-1)
+	}
+	if c+1 < col && grid[r][c+1] == '1' {
+		dfs2(grid, r, c+1)
+	}
 }
