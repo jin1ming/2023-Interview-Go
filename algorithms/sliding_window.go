@@ -2,6 +2,8 @@ package algorithms
 
 import "math"
 
+// 滑动窗口一定要 right 考虑为先！！！！！！！
+
 /***** 无重复字符的最长子串 *****/
 // 类型: 滑动窗口
 func lengthOfLongestSubstring(s string) int {
@@ -12,13 +14,16 @@ func lengthOfLongestSubstring(s string) int {
 	bitmap := make(map[byte]int)
 
 	for right := 0; right < len(s); right++ {
-		if c, ok := bitmap[s[right]]; ok {
-			for left <= c {
+		// 这里查的是和s[right]相同的字符，上一次出现的位置
+		if pos, ok := bitmap[s[right]]; ok {
+			for left <= pos {
+				// left 将自增，直到 c+1 的位置
 				delete(bitmap, s[left])
 				left++
 			}
 		}
 		bitmap[s[right]] = right
+		// 记录走过的位置
 		if right-left > res {
 			res = right - left
 		}
@@ -100,6 +105,9 @@ func numSubarrayProductLessThanK(nums []int, k int) int {
 			left++
 		}
 		res += right - left + 1
+		// 关于 加 right - left + 1（子数组长度）:
+		// 假设子数组 ABCD, right指向D, 此时统计的是D CD BCD ABCD
+		// 统计的是包含right指向元素的子数组个数
 		right++
 	}
 	return res

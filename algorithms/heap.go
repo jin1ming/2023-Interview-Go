@@ -55,8 +55,9 @@ func (h *hp) Pop() (_ interface{}) { return }
 // 一门课要持续学习 t 天直到第 d 天时要完成，你将会从第 1 天开始。
 // 给出 n 个在线课程用 (t, d) 对表示。你的任务是找出最多可以修几门课。
 func scheduleCourse(a [][]int) (ans int) {
-	sort.Slice(a, func(i, j int) bool { return a[i][1] < a[j][1] }) // 按关闭时间排序
-	cur := 0                                                        // 已学习时长
+	// 注意！需要按关闭时间排序！
+	sort.Slice(a, func(i, j int) bool { return a[i][1] < a[j][1] })
+	cur := 0 // 已学习时长
 	h := hp{}
 	for _, p := range a {
 		if t := p[0]; cur+t <= p[1] { // 没有超期，直接学习
