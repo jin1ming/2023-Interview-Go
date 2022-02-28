@@ -1,6 +1,6 @@
 package algorithms
 
-// 上一次学习：2022.2.24
+// 上一次学习：2022.2.24，完成
 import (
 	"strconv"
 	"strings"

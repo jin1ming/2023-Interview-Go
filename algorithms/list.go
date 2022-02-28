@@ -1,6 +1,6 @@
 package algorithms
 
-// 上一次学习：2022.2.24，看到174行
+// 上一次学习：2022.2.24，完成
 
 type ListNode struct {
 	Val  int
@@ -183,31 +183,25 @@ func insert(aNode *Node, x int) *Node {
 	if aNode == nil {
 		return xNode
 	}
-	head := aNode
-	once := true
-	var maxNode, minNode *Node
-	for aNode != head || once {
-		if aNode == head {
-			once = false
+
+	maxNode := aNode
+
+	var p *Node
+	for p != aNode {
+		if p == nil {
+			p = aNode
 		}
-		if aNode.Next.Val > x && (minNode == nil || aNode.Next.Val <= minNode.Next.Val) {
-			minNode = aNode
+		if p.Val <= x && (p.Next.Val >= x || p.Next.Val < p.Val) {
+			p.Next, xNode.Next = xNode, p.Next
+			return aNode
 		}
-		if aNode.Val == x {
-			minNode = aNode
-			break
+		if maxNode.Val < p.Val {
+			maxNode = p
 		}
-		aNode = aNode.Next
-		if aNode.Val < x && (maxNode == nil || aNode.Val >= maxNode.Val) {
-			maxNode = aNode
-		}
+		p = p.Next
 	}
-	if minNode != nil {
-		minNode.Next, xNode.Next = xNode, minNode.Next
-	} else if maxNode != nil {
-		maxNode.Next, xNode.Next = xNode, maxNode.Next
-	}
-	return head
+	maxNode.Next, xNode.Next = xNode, maxNode.Next
+	return aNode
 }
 
 /***** 展平多级双向链表 *****/
