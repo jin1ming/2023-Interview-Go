@@ -128,37 +128,7 @@
 - `fork()`函数调用一次，返回两次。
   - 对于父进程：`fork`的返回值为子进程的`PID`。
   - 对于子进程：`fork`的返回值为`0`。
-
-**follow-up：线程回收方法**
-
-1. **等待线程结束**：
-
-   方法：`int pthread_join(pthread_t tid, void** retval);`
-
-   - 主线程调用这个方法，等待子线程退出，并回收其资源。
-   - 这个方法类似于进程中的`wait / waitpid`方法回收僵尸进程。
-   - 调用`pthread_join`的线程会被阻塞。
-   - 方法传入参数：
-     - `tid`：创建线程时通过指针得到的`tid`值，线程的`id`。
-     - `retval`：指向返回值的指针。
-
-2. **结束线程**：
-
-   方法：`pthread_ext(void *retval);`
-
-   - 这个方法由子线程执行，用来结束当前线程并通过`retval`传递返回值。
-   - 该返回值可以通过`pthread_join`获得。
-   - 这个方法的参数`retval`和`pthread_join`一样，都是指向返回值的指针。
-
-3. **分离线程**：
-
-   方法：`int pthread_detach(pthread_t tid);`
-
-   - 这个方法主线程、子线程都可以调用。
-     - 主线程中调用`pthread_detach(tid)`。
-     - 子线程中调用`pthread_detach(pthread_self())`。调用后和主线程分离，子线程结束时自己立即回收资源。
-   - 参数`tid`和`pthread_join`方法的`tid`一样，都是创建线程时通过通知得到的`tid`值，表示线程的`id`。
-
+  
 **follow-up：线程崩溃会影响进程吗？**
 
 - 线程没有独立的地址空间，如果崩溃，会发信号。

@@ -51,6 +51,9 @@ func mergeSort(nums []int, start, end int) int {
 }
 
 /***** 快速排序 *****/
+// 最坏时间复杂度：O(n^2)
+// 最好/平均时间复杂度：O(nlogn)
+// 空间复杂度：O(logn)
 func sortArray(nums []int) []int {
 
 	var quickSort func(left, right int)
