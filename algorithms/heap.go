@@ -72,3 +72,45 @@ func scheduleCourse(a [][]int) (ans int) {
 	}
 	return
 }
+
+/***** 数组中的第K个最大元素 *****/
+// 维护一个最小堆，这个最小堆保证存放的是数组中的最大值
+func findKthLargest(nums []int, k int) int {
+	h := &KHeap{}
+	heap.Init(h)
+	for _, v := range nums {
+		if h.Len() == k {
+			if v > h.nums[0] {
+				h.nums[0] = v
+				heap.Fix(h, 0)
+			}
+		} else {
+			heap.Push(h, v)
+		}
+	}
+	return h.nums[0]
+}
+
+type KHeap struct {
+	nums []int
+}
+
+func (kh *KHeap) Len() int {
+	return len(kh.nums)
+}
+
+func (kh *KHeap) Swap(i, j int) {
+	kh.nums[i], kh.nums[j] = kh.nums[j], kh.nums[i]
+}
+
+func (kh *KHeap) Push(val interface{}) {
+	kh.nums = append(kh.nums, val.(int))
+}
+
+func (kh *KHeap) Less(i, j int) bool {
+	return kh.nums[i] < kh.nums[j]
+}
+
+func (kh *KHeap) Pop() (_ interface{}) {
+	return
+}
