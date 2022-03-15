@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 - i++为什么不是线程安全的
   - 底层经历了读取数据、更新CPU缓存、存入内存等操作
   - 编译器编译和CPU处理时通过调整指令顺序进行优化
@@ -31,8 +30,6 @@
              - 自旋次数超过了设定的阈值
         2. 
     - 读写锁
-      - 1
-=======
 - 数组和切片有什么区别？
     - go语言中数组是一种值类型，[2]int和[3]int是两种不同的类型；切片类型只和它的基础数据类型有关，如[]int和[]string.
     - 数组本身的赋值和传参都是以整体复制进行处理的；而切片复制的只有切片头部分信息，因为包含底层数据指针。
@@ -80,4 +77,52 @@
   与WaitGroup的不同在于context可以控制多级的goroutine。
 
   Context是线程安全的。 
->>>>>>> Stashed changes
+
+### Gin的启动过程
+
+#### 项目的main函数
+
+主函数位于项目根目录下的main.go中，代码如下：
+
+```
+package main
+
+import (
+	"github.com/LearnGin/handler"
+	"github.com/LearnGin/middleware"
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	// init gin with default configs
+	r := gin.Default()
+
+	// append custom middle-wares
+	middleware.RegisterMiddleware(r)
+	// register custom routers
+	handler.RegisterHandler(r)
+
+	// run the engine
+	r.Run()
+}
+```
+
+主要步骤：
+
+1. 初始化Gin
+
+   ```
+   gin.Default()
+   ```
+
+   执行Gin的初始化过程，默认的初始化包含两个中间件，
+
+   1. **Logger**：日志中间件，将Gin的启动与响应日志输出到控制台；
+   2. **Recovery**：恢复中间件，将Gin遇到的无法处理的请求按HTTP 500状态码返回。
+
+2. **注册中间件**：本例的`middleware.RegisterMiddleware(r)`用于将项目中开发的中间件注册到Gin Engine上；
+
+3. **注册事件处理**：本例的`handler.RegisterHandler(r)`用于将项目中开发的对应于指定URL的事件处理函数注册到Gin Engine上；
+
+4. **启动Gin**：`r.Run()`负责启动Gin Engine，开始监听请求并提供HTTP服务。
+
