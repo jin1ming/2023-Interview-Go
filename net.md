@@ -105,13 +105,13 @@
 
 - TCP协议和UDP协议有什么区别？
 
-- TCP和UDP协议属于传输层协议，主要区别：
-  1、TCP是面向连接的，UDP是无连接的;
-  2、TCP是可靠的，UDP是不可靠的;
-  3、TCP只支持点对点通信，UDP支持一对一、一对多、多对一、多对多的通信模式;
-  4、TCP是面向字节流的，UDP是面向报文的;
-  5、TCP有拥塞控制机制;UDP没有拥塞控制，适合媒体通信;
-  6、TCP首部开销(20个字节)比UDP的首部开销(8个字节)要大;
+  - TCP和UDP协议属于传输层协议，主要区别：
+    1、TCP是面向连接的，UDP是无连接的;
+    2、TCP是可靠的，UDP是不可靠的;
+    3、TCP只支持点对点通信，UDP支持一对一、一对多、多对一、多对多的通信模式;
+    4、TCP是面向字节流的，UDP是面向报文的;
+    5、TCP有拥塞控制机制;UDP没有拥塞控制，适合媒体通信;
+    6、TCP首部开销(20个字节)比UDP的首部开销(8个字节)要大;
 
 - TCP协议的三次握手和四次挥手？为什么是三次和四次？
 
@@ -126,19 +126,20 @@
     第三次握手：Client收到确认后，检查ack是否为J+1，ACK是否为1，如果正确则将标志位ACK置为1，ack=K+1，并将该数据
     包发送给Server，Server检查ack是否为K+1，ACK是否为1，如果正确则连接建立成功，Client和Server进入ESTABLISHED状
     态，完成三次握手，随后Client与Server之间可以开始传输数据了。
-
-
+    
+    
+    
   - 四次挥手(我要和你断开链接;好的，断吧。我也要和你断开链接;好的，断吧)
     
-    第一次挥手：Client发送一个FIN，用来关闭Client到Server的数据传送，Client进入FIN_WAIT_1状态。 
-    
-    第二次挥手：Server收到FIN后，发送一个ACK给Client，确认序号为收到序号+1(与SYN相同，一个FIN占用一个序号)，Server进
-    入CLOSE_WAIT状态。此时TCP链接处于半关闭状态，即客户端已经没有要发送的数据了，但服务端若发送数据，则客户端仍要接收。 
-    
-    第三次挥手：Server发送一个FIN，用来关闭Server到Client的数据传送，Server进入LAST_ACK状态。 
-    
-    第四次挥手：Client收到FIN后，Client进入TIME_WAIT状态，接着发送一个ACK给Server，确认序号为收到序号+1，Server进
-    入CLOSED状态，完成四次挥手。
+      第一次挥手：Client发送一个FIN，用来关闭Client到Server的数据传送，Client进入FIN_WAIT_1状态。 
+      
+      第二次挥手：Server收到FIN后，发送一个ACK给Client，确认序号为收到序号+1(与SYN相同，一个FIN占用一个序号)，Server进入CLOSE_WAIT状态。此时TCP链接处于半关闭状态，即客户端已经没有要发送的数据了，但服务端若发送数据，则客户端仍要接收。 
+      
+      第三次挥手：Server发送一个FIN，用来关闭Server到Client的数据传送，Server进入LAST_ACK状态。 
+      
+      第四次挥手：Client收到FIN后，Client进入TIME_WAIT状态，接着发送一个ACK给Server，确认序号为收到序号+1，Server进
+      入CLOSED状态，完成四次挥手。
+
 
 
 ​	**三次握手**：目的是为了防止已失效的链接请求报文突然又传送到了服务端，因而产生错误。
