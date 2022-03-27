@@ -1,5 +1,8 @@
 ## Dockerfile
 
+- 结构
+  - 基础镜像信息、维护者信息、镜像操作指令、容器启动时执行指令
+
 - 指令：
 
   FROM、MAINTAINER、RUN、CMD、EXPOSE、ENV、ADD、COPY、ENTRYPOINT、VOLUME、USER、WORKDIR、ONBUILD
@@ -28,9 +31,17 @@
 
   ONBUILD：命令出现的Dockerfile里不会执行指令，但被其他Dockerfile所引用的时候会执行
 
-- 镜像构建
+  
 
-  TODO: [(16条消息) 构建Docker镜像的原理_人人都是酸菜鱼又酸又菜又多余的博客-CSDN博客_docker镜像构建原理](https://blog.csdn.net/Ghostpant/article/details/110189477)
+- 镜像分层构建
+
+  - Dockerfile中每个指令都会创建一个新的镜像层
+  - 镜像层将会被缓存和复用
+  - 当Dockerfile的指令修改了，复制的文件变化了，或者构建镜像时指定的变量不同了，对应的缓存就会失效
+  - 某一层的镜像缓存失效后，它之后的镜像层缓存就会都失效
+  - 镜像层是不可变的，即便下一层删除某个文件，其镜像中仍然会包含该文件
+  
+  
 
 ## 原理
 
@@ -126,6 +137,6 @@ Docker操作CGroups的方式如下图所示：
 
 - 如何借助宿主机上工具排查问题？考察命名空间
 
-  kubectl debug
+  kubectl debug、nsenter
 
 - init pod
