@@ -1,4 +1,4 @@
-# Kubernetes
+# Kubernetes笔记
 
 目录：
 
@@ -54,6 +54,14 @@ ReplicaSet确保任何时间都有指定数量的Pod副本在运行。
 
 一般使用Deployment管理ReplicaSet，并向Pod提供声明式的更新及其他功能。
 
+### Service
+
+将运行在一组Pods上的应用程序公开为网络服务的抽象方法。
+
+为Pods提供自己的IP地址，并为一组Pod提供相同的DNS名以及负载均衡。
+
+解决了前端Pod无法跟踪后端Pod的IP变化问题。
+
 ## Controller
 
 ### 1. Deployment
@@ -86,21 +94,43 @@ StatefulSet 为它们的每个 Pod 维护了一个有粘性的 ID。这些 Pod �
 - 需要无头服务来负责Pod的网络标志
 - TODO: 下面不理解
 - 当删除 StatefulSets 时，StatefulSet 不提供任何终止 Pod 的保证。 为了实现 StatefulSet 中的 Pod 可以有序地且体面地终止，可以在删除之前将 StatefulSet 缩放为 0。
-- 在默认 Pod 管理策略(OrderedReady) 时使用 滚动更新，可能进入需要人工干预 才能修复的损坏状态。
+- 在默认 Pod 管理策略(OrderedReady) 时使用 滚动更新，可能进入需要**人工干预**才能修复的损坏状态。
 
 ### 3. DaemonSet
 
-*DaemonSet* 确保全部（或者某些）节点上运行一个 Pod 的副本。
+DaemonSet 确保全部（或者某些）节点上运行一个 Pod 的副本。
 
 - 在每个节点上运行集群守护进程
 - 在每个节点上运行日志收集守护进程
 - 在每个节点上运行监控守护进程
 
-### 4. ReplicationController 和 ReplicaSet
+### 4. Job
 
-### 5. Job
+Job 会创建一个或者多个 Pods，并将继续重试 Pods 的执行，直到指定数量的 Pods 成功终止。 
 
-### 6. CronJob
+随着 Pods 成功结束，Job 跟踪记录成功完成的 Pods 个数。 当数量达到指定的成功个数阈值时，任务（即 Job）结束。
+
+删除 Job 的操作会清除所创建的全部 Pods。 
+
+挂起 Job 的操作会删除 Job 的所有活跃 Pod，直到 Job 被再次恢复执行。
+
+### 5. CronJob
+
+CronJob 创建基于时隔重复调度的 Jobs。
+
+**Cron时间表语法**
+
+```
+# ┌───────────── 分钟 (0 - 59)
+# │ ┌───────────── 小时 (0 - 23)
+# │ │ ┌───────────── 月的某天 (1 - 31)
+# │ │ │ ┌───────────── 月份 (1 - 12)
+# │ │ │ │ ┌───────────── 周的某天 (0 - 6)（周日到周一；在某些系统上，7 也是星期日）
+# │ │ │ │ │                          或者是 sun，mon，tue，web，thu，fri，sat
+# │ │ │ │ │
+# │ │ │ │ │
+# * * * * *
+```
 
 
 
