@@ -1,6 +1,6 @@
 package algorithms
 
-// 上一次学习：2022.2.24，完成
+// 上一次学习：2022.4.8，完成
 
 type ListNode struct {
 	Val  int
@@ -171,7 +171,6 @@ type Node struct {
 	Prev  *Node
 }
 
-//TODO: 看到了这里
 /***** 排序的循环链表 *****/
 // 给定循环升序列表中的一个点，写一个函数向这个列表中插入一个新元素 insertVal ，使这个列表仍然是循环升序的。
 // 给定的可以是这个列表中任意一个顶点的指针，并不一定是这个列表中最小元素的指针。
@@ -200,6 +199,7 @@ func insert(aNode *Node, x int) *Node {
 		}
 		p = p.Next
 	}
+	// 找不到合适位置时，加到最大值节点后面
 	maxNode.Next, xNode.Next = xNode, maxNode.Next
 	return aNode
 }

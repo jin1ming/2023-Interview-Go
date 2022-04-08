@@ -1,5 +1,7 @@
 package algorithms
 
+// 上一次学习：2022.4.7，完成
+
 import (
 	"math/rand"
 	"time"

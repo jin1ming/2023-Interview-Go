@@ -1,36 +1,10 @@
 package algorithms
 
+// 上一次学习：2022.4.7，看到了133
+
 import "math"
 
-//单调栈实现
-func maximalRectangle2(matrix [][]byte) int {
-	if matrix == nil || len(matrix) == 0 {
-		return 0
-	}
-	//保存最终结果
-	res := 0
-	//行数，列数
-	m, n := len(matrix), len(matrix[0])
-	//高度数组（统计每一行中1的高度）
-	height := make([]int, n)
-	for i := 0; i < m; i++ {
-		for j := 0; j < n; j++ {
-			//每一行去找1的高度
-			//如果不是‘1’，则将当前高度置为0
-			if matrix[i][j] == '0' {
-				height[j] = 0
-			} else {
-				//是‘1’，则将高度加1
-				height[j] = height[j] + 1
-			}
-		}
-		//更新最大矩形的面积
-		res = int(math.Max(float64(res), float64(largestRectangleArea2(height))))
-	}
-	return res
-}
-
-/***** 单词拆分  *****/
+/***** 单词拆分 *****/
 // 给定一个非空字符串 s 和一个包含非空单词的列表 wordDict，
 // 判定 s 是否可以被空格拆分为一个或多个在字典中出现的单词。
 // 说明：
@@ -43,10 +17,10 @@ func wordBreak(s string, wordDict []string) bool {
 	}
 	dp := make([]bool, len(s)+1)
 	dp[0] = true
-	for i := 1; i <= len(s); i++ {
-		for j := 0; j < i; j++ {
-			if dp[j] && wordDictSet[s[j:i]] {
-				dp[i] = true
+	for right := 1; right <= len(s); right++ {
+		for left := 0; left < right; left++ {
+			if dp[left] && wordDictSet[s[left:right]] {
+				dp[right] = true
 				break
 			}
 		}
@@ -122,6 +96,8 @@ func tMin(a, b, c int) int {
 }
 
 /***** 最小路径之和 *****/
+// 给定一个包含非负整数的 m x n 网格 grid ，
+// 请找出一条从左上角到右下角的路径，使得路径上的数字总和为最小。
 // 一个机器人每次只能向下或者向右移动一步
 func minPathSum(grid [][]int) int {
 	row := len(grid)
@@ -198,6 +174,34 @@ func maximalRectangle0(matrix [][]byte) int {
 				res = max(res, w*(i-k+1))
 			}
 		}
+	}
+	return res
+}
+
+//单调栈实现
+func maximalRectangle2(matrix [][]byte) int {
+	if matrix == nil || len(matrix) == 0 {
+		return 0
+	}
+	//保存最终结果
+	res := 0
+	//行数，列数
+	m, n := len(matrix), len(matrix[0])
+	//高度数组（统计每一行中1的高度）
+	height := make([]int, n)
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			//每一行去找1的高度
+			//如果不是‘1’，则将当前高度置为0
+			if matrix[i][j] == '0' {
+				height[j] = 0
+			} else {
+				//是‘1’，则将高度加1
+				height[j] = height[j] + 1
+			}
+		}
+		//更新最大矩形的面积
+		res = int(math.Max(float64(res), float64(largestRectangleArea2(height))))
 	}
 	return res
 }

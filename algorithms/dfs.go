@@ -1,6 +1,7 @@
 package algorithms
 
-// 上一次学习：2022.2.24，完成
+// 上一次学习：2022.4.7，完成
+
 import (
 	"strconv"
 	"strings"
@@ -133,6 +134,7 @@ func restoreIpAddresses(s string) []string {
 		if s[segStart] == '0' {
 			segments[segId] = 0
 			dfs(s, segId+1, segStart+1)
+			return
 		}
 		// 一般情况，枚举每一种可能性并递归
 		addr := 0

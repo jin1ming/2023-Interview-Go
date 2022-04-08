@@ -36,7 +36,7 @@ func getSum(a int, b int) int {
 	// 异或+与运算:时间复杂度O(logSum) | 空间复杂度O(1)
 	// a + b 的问题拆分为 (a 和 b 的无进位结果) + (a 和 b 的进位结果)
 	// 最后这个 + 再用无进位结果（异或）来表示
-	a, b = a^b, (a&b)<<1
+	// a, b = a^b, (a&b)<<1
 	for b != 0 {
 		a, b = a^b, (a&b)<<1
 	}

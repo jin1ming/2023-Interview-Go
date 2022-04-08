@@ -1,6 +1,7 @@
 package algorithms
 
-// 上一次学习：2022.2.28，完成
+// 上一次学习：2022.4.7，完成
+
 import (
 	"math"
 	"sort"
@@ -9,17 +10,17 @@ import (
 /***** 两数之和 *****/
 func twoSum(nums []int, target int) []int {
 	left, right := 0, len(nums)-1
-	indexs := make([]int, len(nums))
-	for i := range indexs {
-		indexs[i] = i
+	indexes := make([]int, len(nums))
+	for i := range indexes {
+		indexes[i] = i
 	}
-	sort.Slice(indexs, func(i, j int) bool {
-		return nums[indexs[i]] < nums[indexs[j]]
+	sort.Slice(indexes, func(i, j int) bool {
+		return nums[indexes[i]] < nums[indexes[j]]
 	})
 	for left < right {
-		sum := nums[indexs[left]] + nums[indexs[right]]
+		sum := nums[indexes[left]] + nums[indexes[right]]
 		if sum == target {
-			return []int{indexs[left], indexs[right]}
+			return []int{indexes[left], indexes[right]}
 		} else if sum < target {
 			left++
 		} else {
