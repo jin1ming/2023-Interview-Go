@@ -166,6 +166,7 @@ func maximalRectangle0(matrix [][]byte) int {
 	for i := 0; i < row; i++ {
 		for j := 0; j < col; j++ {
 			w := dp[i][j]
+			// 从下往上扫描
 			for k := i; k >= 0; k-- {
 				w = min(w, dp[k][j])
 				if w == 0 {

@@ -41,8 +41,6 @@ DELETE      /zoos/ID/animals/ID：删除某个指定动物园的指定动物
 
 反例：
 
-
-
 ```undefined
 /getAllCars
 /createNewCar

@@ -213,13 +213,32 @@ PushGateway作为中转站，解决Prometheus无法与Exporter通信来Pull数�
 
 - histogram_quantile
 
-  TODO：这里之后的未完成
+  φ（0<φ<1）表示需要计算的分位数，如果需要计算中位数φ取值为0.5，以此类推即可。
+  
+  ```PromQL
+  histogram_quantile(0.5, http_request_duration_seconds_bucket
+  ```
+
+  [Prometheus 常用函数 histogram_quantile 的若干“反直觉”问题 - 云+社区 - 腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/1579806)
 
 #### 4.4 动态标签替换
 
 - label_replace
 
-### 4个黄金指标
+  使用方式：
+  
+  ```PromQL
+  label_replace(v instant-vector, dst_label string, replacement string, src_label string, regex string)
+  ```
+  例：
+  
+  ```PromQL
+  label_replace(up, "host", "$1", "instance",  "(.*):.*")
+  ```
+  
+  PS: `$1`指的是`(.*)`的数据
+
+#### 4.5 Google的4个黄金指标
 
 - 延迟：服务请求所需时间。
 - 通讯量：监控当前系统的流量，用于衡量服务的容量需求。

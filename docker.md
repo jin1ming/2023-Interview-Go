@@ -1,3 +1,5 @@
+[TOC]
+
 ## Dockerfile
 
 - 结构
@@ -133,10 +135,26 @@ Docker操作CGroups的方式如下图所示：
 
 ![下载 (assets/下载 (4).png)](assets/下载 (4).png)
 
-## 实践技巧
+## Q&A
 
 - 如何借助宿主机上工具排查问题？考察命名空间
 
   kubectl debug、nsenter
 
-- init pod
+- docker镜像的构建方法
+
+  基于已有镜像创建：对容器进行docker commit
+
+  基于本地模板创建：导入操作系统模板
+
+  基于Dockerfile
+
+- 容器间通信：
+
+  none（容器网络堆栈）、host（主机网络堆栈）、default bridge（IP地址链接）、自定义网桥
+
+  容器IP、宿主机IP、link、User-defined networks（桥接网络）
+
+- 容器与宿主机一个网段该怎么实现？
+
+  macvlan的原理是在宿主机物理网卡上虚拟出多个子网卡，通过不同的MAC地址在数据链路层进行网络数据转发的，它是比较新的网络虚拟化技术，需要较新的内核支持（Linux kernel v3.9–3.19 and 4.0+）

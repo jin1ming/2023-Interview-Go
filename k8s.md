@@ -220,3 +220,49 @@ spec: #specification of the resource content 指定该资源的内容
     #nfs
 ```
 
+## Q&A
+
+### Pod的创建流程
+
+- 用户通过kubectl命名发起请求。
+- apiserver通过对应的kubeconfig进行认证，认证通过后将yaml中的po信息存到etcd。
+- Controller-Manager通过apiserver的watch接口发现了pod信息的更新，执行该资源所依赖的拓扑结构整合，整合后将对应的信息交给apiserver，apiserver写到etcd，此时pod已经可以被调度了。
+- Scheduler同样通过apiserver的watch接口更新到pod可以被调度，通过算法给pod分配节点，并将pod和对应节点绑定的信息交给apiserver，apiserver写到etcd，然后将pod交给kubelet。
+- kubelet收到pod后，调用CNI接口给pod创建pod网络，调用CRI接口去启动容器，调用CSI进行存储卷的挂载。
+- 网络，容器，存储创建完成后pod创建完成，等业务进程启动后，pod运行成功
+
+### Service流量转发过程
+
+- 3（+1）种访问方式：
+
+  - ClusterIP： 分配一个集群内的虚拟IP，默认类型。这种方式提供的ClusterIP只能在K8s集群内访问。
+
+  - NodePort：在每个Node上提供一个相同静态端口，作为服务的端口映射。可以使用NodeIP:NodePort的方式从集群外进行服务的访问。
+
+  - LoadBalancer：使用外部的负载均衡器来提供服务的访问功能。
+
+  - 另外，还有一种ExternalName类型，通过将服务映射到某个域名来提供访问，这种方式需要使用1.7版本及以上的kube-dns组件，一般使用较少。
+
+- kube-proxy三种运行模式：
+
+  - userspace
+  - iptables
+  - ipvs
+
+### k8s接口与传统接口的区别
+
+### Pod启动失败的情况
+
+### k8s开发系统上线前夕要做些什么
+
+（service loadbalancer负载均衡、k8s高可用、系统数据持久化、节点漂移备份）
+
+### pod内容器是怎么共享网络和内存的
+
+### 怎样让一个pod优先提供服务
+
+### list-watch实现，用的http什么机制
+
+### k8s高可用
+
+### kube-scheduler调度机制
