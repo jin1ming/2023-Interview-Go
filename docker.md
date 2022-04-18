@@ -147,7 +147,7 @@ Docker操作CGroups的方式如下图所示：
 
   基于本地模板创建：导入操作系统模板
 
-  基于Dockerfile
+  基于Dockerfile 
 
 - 容器间通信：
 

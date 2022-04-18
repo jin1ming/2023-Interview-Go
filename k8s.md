@@ -225,7 +225,7 @@ spec: #specification of the resource content 指定该资源的内容
 ### Pod的创建流程
 
 - 用户通过kubectl命名发起请求。
-- apiserver通过对应的kubeconfig进行认证，认证通过后将yaml中的po信息存到etcd。
+- apiserver通过对应的kubeconfig进行认证，认证通过后将yaml中的pod信息存到etcd。
 - Controller-Manager通过apiserver的watch接口发现了pod信息的更新，执行该资源所依赖的拓扑结构整合，整合后将对应的信息交给apiserver，apiserver写到etcd，此时pod已经可以被调度了。
 - Scheduler同样通过apiserver的watch接口更新到pod可以被调度，通过算法给pod分配节点，并将pod和对应节点绑定的信息交给apiserver，apiserver写到etcd，然后将pod交给kubelet。
 - kubelet收到pod后，调用CNI接口给pod创建pod网络，调用CRI接口去启动容器，调用CSI进行存储卷的挂载。
@@ -246,8 +246,18 @@ spec: #specification of the resource content 指定该资源的内容
 - kube-proxy三种运行模式：
 
   - userspace: 需要内核态用户态多次转换
+  
   - iptables（默认）：依赖netfilter/iptable模块
-  - ipvs
+  
+    不同于userspace，iptables由kube-proxy动态的管理，kube-proxy不再负责转发，数据包的走向完全由iptables规则决定，这样的过程不存在内核态到用户态的切换，效率明显会高很多。但是随着service的增加，iptables规则会不断增加，导致内核十分繁忙（等于在读一张很大的没建索引的表）。
+  
+  - ipvs：也是基于netfilter实现的
+  
+    iptables是为防火墙设计的，IPVS则专门用于高性能负载均衡，并使用高效的数据结构Hash表，允许几乎无限的规模扩张。
+  
+    假设要禁止上万个IP访问我们的服务器，如果用iptables的话，就需要一条一条的添加规则，会生成大量的iptabels规则；但是用ipset的话，只需要将相关IP地址加入ipset集合中即可，这样只需要设置少量的iptables规则即可实现目标。
+  
+    由于ipvs无法提供包过滤、地址伪装、SNAT等功能，所以某些场景下（比如NodePort的实现）还要与iptables搭配使用。
 
 ### k8s接口与传统接口的区别
 

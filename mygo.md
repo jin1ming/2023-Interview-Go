@@ -75,6 +75,7 @@
     Data uintptr
     len int
     Cap int
+   }
   ```
 
 ## 字符串和数组有什么区别？
