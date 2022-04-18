@@ -245,11 +245,21 @@ spec: #specification of the resource content 指定该资源的内容
 
 - kube-proxy三种运行模式：
 
-  - userspace
-  - iptables
+  - userspace: 需要内核态用户态多次转换
+  - iptables（默认）：依赖netfilter/iptable模块
   - ipvs
 
 ### k8s接口与传统接口的区别
+
+基于RESTful，不同在于list-watch
+
+**Why list-watch?** 如果采用客户端轮询，将会加大`apiserver`压力，同时实时性很低；如果`apiserver`主动发起`HTTP`请求，无法保证消息的可靠性、大量端口占用问题；如果使用`TCP`~~负载高、引起互联网拥塞、大量端口占用~~。
+
+使用`list`来描述返回资源集合的操作，以便于返回单个资源的`get`操作相区分。（实际使用的还是`GET`）
+
+`watch`通过`http长链接`来实现快速检测变更。使用的`Chunked transfer encoding(分块传输编码)`，出现于HTTP/1.1，即response`的`HTTP Header`中设置`Transfer-Encoding`的值为`chunked。服务器会返回所提供的 `resourceVersion` 之后发生的所有变更（创建、删除和更新）。
+
+> HTTP 分块传输编码允许服务器为动态生成的内容维持 HTTP 持久链接。通常，持久链接需要服务器在开始发送消息体前发送Content-Length消息头字段，但是对于动态生成的内容来说，在内容创建完之前是不可知的。使用分块传输编码，数据分解成一系列数据块，并以一个或多个块发送，这样服务器可以发送数据而不需要预先知道发送内容的总大小。
 
 ### Pod启动失败的情况
 
@@ -259,10 +269,72 @@ spec: #specification of the resource content 指定该资源的内容
 
 ### pod内容器是怎么共享网络和内存的
 
+pause父容器来共享namespace
+
 ### 怎样让一个pod优先提供服务
 
-### list-watch实现，用的http什么机制
+设置pod优先级（priority）？
+
+### list-watch用的http什么机制
+
+chunked机制
 
 ### k8s高可用
 
+- 堆控制平面+etcd节点
+- 外部etcd节点
+
 ### kube-scheduler调度机制
+
+维护一个`PodQueue`，按照一定算法将节点分配给Pods。
+
+调度器先在集群中找到一个 Pod 的所有可调度节点【**过滤**】，然后根据一系列函数对这些可调度节点打分【**打分**】， 选出其中得分最高的 Node 来运行 Pod。之后，调度器将这个调度决定通知给 kube-apiserver，这个过程叫做 *绑定*。
+
+在做调度决定时需要考虑的因素包括：单独和整体的资源请求、硬件/软件/策略限制、 亲和以及反亲和要求、数据局域性、负载间的干扰等等。
+
+### iptables 五表五链工作原理，DNAT发生在哪条链？
+
+iptables的底层实现是**netfilter**，其架构是在整个网络流程的若干位置放置一些钩子，并在每个钩子上挂载一些处理函数进行处理。它作为一个通用的、抽象的框架，提供一整套hook函数的管理机制，是的数据包过滤、包处理（设置标志位、修改TTL）、地址伪装、网络地址转换、透明代理、访问控制、基于协议类型的链接跟踪，甚至带宽限速等功能成为可能。
+
+- **5 chain**
+
+  IP层的5个钩子点的位置，对应iptables就是5条**内置链**，分别是**PREROUTING、POSTROUTING、INPUT、OUTPUT和FORWAR**。支持用户自定义链。
+
+  - PREROUTING：可以在此处进行DNAT（destination NAT POSTROUTING，用于互联网访问局域网）
+  - POSTROUTING：可以在此处进行SNAT（source NAT POSTROUTING，用于局域网访问互联网）
+  - INPUT：处理输入本地进程的数据包
+  - OUTPUT：处理本地进程的输出数据包
+  - FORWARD：处理转发到其他机器/network namespace的数据包
+
+- **5 table**
+
+  优先级从高到低为：raw、mangle、nat、filter、security，不支持用户自定义表。
+
+  - filter表：用于控制到达某条链上的数据包是否继续放行、直接丢弃（drop）或拒绝（reject）
+  - nat标：用于修改数据包的源和目的地址
+  - mangle表：用于修改数据包的IP头信息
+  - raw表：iptables是有状态的，即iptables对数据包有链接追踪（connection tracking）机制，而raw是用来去除这种追踪机制的
+  - security表：用于在数据包上应用SELinux
+
+  不是每个链上都拥有这5个表：
+
+  - raw存在于PREROUTING和OUTPUT。对应输入和输出经过的第一条链。
+  - mangle存在于所有链中。
+  - nat(SNAT)存在于POSTROUTING和INPUT。
+  - nat(DNAT)存在于PREROUTING和OUTPUT。
+  - filter、security存在于FORWARD、INPUT、OUTPUT。
+
+- **rule**
+
+  iptables的表示所有规则的5个逻辑集合，一跳iptables规则包含两部分信息：匹配条件和动作。
+
+  匹配条件，即匹配数据包被这条iptables规则“捕获”的条件，例如协议类型、源IP、目的IP、源端口、目的端口、连接状态等。每条iptables规则允许多个匹配条件任意组合，从而实现多条件的匹配，多条件之间是逻辑与关系。
+
+  常见动作有:
+
+  - DROP：直接将数据包丢弃。应用场景：不让某个数据源意识到系统的存在，可以用来模拟宕机。
+  - REJECT：给客户端返回connection refused或destination unreachable报文，应用场景：不让某个数据源访问系统，提示这里没有想要的服务内容。
+  - QUEUE：将数据包放入用户空间的队列，供用户空间的程序处理。
+  - RETURN：跳出当前链，该链后续规则不再执行。
+  - ACCEPT：统一数据包通过，继续执行后续的规则。
+  - JUMP：跳转到其他用户自定义的链继续执行。
