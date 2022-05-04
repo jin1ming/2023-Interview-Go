@@ -46,9 +46,9 @@ func spiralOrder(matrix [][]int) []int {
 }
 
 /***** 接雨水 *****/
-// TODO: 遗忘 + 还有多种方法
 func trap(height []int) int {
 	maxHeight := 0
+	// 扫描最大高度
 	for _, k := range height {
 		if k > maxHeight {
 			maxHeight = k
@@ -58,6 +58,7 @@ func trap(height []int) int {
 	capacity := 0
 
 	for k := 1; k <= maxHeight; k++ {
+		// 按行求雨水
 		pre := -1
 		for i := 0; i < len(height); i++ {
 			if height[i] < k {
@@ -66,6 +67,7 @@ func trap(height []int) int {
 			if pre == -1 {
 				pre = i
 			} else {
+				// += 后面是该行两道墙之间的空格数量
 				capacity += i - pre - 1
 				pre = i
 			}
