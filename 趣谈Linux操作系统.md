@@ -204,8 +204,8 @@ vruntime的计算方式如下所示：
 ### Fork
 
 - 复制PCB
-  1. Alloc New PCB
-  2. Alloc NewPCB.stack
+  1. Alloc New PCB （即task_struct）
+  2. Alloc NewPCB.stack（创建内核栈）
   3. 调用memcpy拷贝Old PCB -> New PCB
   4. Alloc NewPCB.thread_info
   5. 更新New PCB中的信息，主要分为以下几个角度：
