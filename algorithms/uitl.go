@@ -1,15 +1,23 @@
 package algorithms
 
-func max(a, b int) int {
-	if a > b {
-		return a
+import "math"
+
+func max(vals ...int) int {
+	ans := math.MinInt64
+	for _, v := range vals {
+		if v > ans {
+			ans = v
+		}
 	}
-	return b
+	return ans
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
+func min(vals ...int) int {
+	ans := math.MinInt64
+	for _, v := range vals {
+		if v < ans {
+			ans = v
+		}
 	}
-	return b
+	return ans
 }

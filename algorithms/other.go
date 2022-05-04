@@ -488,3 +488,19 @@ func advantageCount(nums1 []int, nums2 []int) []int {
 	}
 	return res
 }
+
+/***** 任务调度器 *****/
+func leastInterval(tasks []byte, n int) int {
+	table := make([]int, 26)
+	for _, c := range tasks {
+		table[c-'A']++
+	}
+	sort.Slice(table, func(i, j int) bool {
+		return table[i] > table[j]
+	})
+	cnt := 1
+	for cnt < len(table) && table[cnt] == table[0] {
+		cnt++
+	}
+	return max(len(tasks), cnt+(n+1)*(table[0]-1))
+}
