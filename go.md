@@ -56,40 +56,6 @@
   同步协作式调度
   异步抢占式调度
 
-- channel底层的数据结构是什么？发送和接收元素的本质是什么？
-
-```go
-type hchan struct {
-    qcount   uint           // *chan里元素数量
-    dataqsiz uint           // *底层循环数组的长度，就是chan的容量
-    buf      unsafe.Pointer // *指向大小为dataqsiz的数组，有缓冲的channel
-    elemsize uint16         // chan中的元素大小
-    closed   uint32         // chan是否被关闭的标志
-    elemtype *_type         // chan中元素类型
-    recvx    uint           // *当前可以接收的元素在底层数组索引(<-chan)
-    sendx    uint           // *当前可以发送的元素在底层数组索引(chan<-)
-    recvq    waitq          // 等待接收的协程队列(<-chan)
-    sendq    waitq          // 等待发送的协程队列(chan<-)
-    lock     mutex          // 互斥锁,保证每个读chan或者写chan的操作都是原子的
-}
-
-// waitq是sudog的一个双向链表，sudog实际上是对goroutine的一个封装。
-type waitq struct {
-	first *sudog
-	last  *sudog
-}
-
-// channel的发送和接收操作本质上都是"值的拷贝"(只是拷贝它的值而已)，
-```
-- channel使用应该注意哪些情况，在哪些情况下会死锁/阻塞？
-  	1、一个无缓冲channel在一个主go程里同时进行读和写；
-  	2、无缓冲channel在go程开启之前使用通道；
-  	3、通道1中调用了通道2，通道2中调用了通道1；
-  	4、读取空的channel；
-  	5、超过channel缓存继续写入数据；
-  	6、向已经关闭的channel中写入数据不会导致死锁，但会Panic异常。
-  	7、close一个已经关闭的channel会Panic异常。
-
 - 那些类型不能作map的为key？map的key为什么是无序的？
 		map的key必须可以比较，func、map、slice这三种类型不可比较，只有在都是nil的情况下，才可与nil (== or !=)。因此这三种类型不能作为map的key。
 	
