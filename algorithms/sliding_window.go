@@ -89,6 +89,41 @@ func minSubArrayLen(target int, nums []int) int {
 	return res
 }
 
+func minOperations(nums []int, x int) int {
+	res := math.MaxInt64
+
+	target := -x
+	for _, n := range nums {
+		target += n
+	}
+	if target == 0 {
+		return len(nums)
+	}
+	if target < 0 {
+		return -1
+	}
+	left := 0
+	sum := 0
+	for right := 0; right < len(nums); right++ {
+		sum += nums[right]
+		for sum > target {
+			sum -= nums[left]
+			left++
+		}
+		if sum == target {
+			opTimes := left + len(nums) - right - 1
+			if opTimes < res {
+				res = opTimes
+			}
+		}
+	}
+
+	if res == math.MaxInt64 {
+		return -1
+	}
+	return res
+}
+
 /***** 乘积小于 K 的子数组 *****/
 // 滑动窗口一定要 right 考虑为先！！！！！！！
 func numSubarrayProductLessThanK(nums []int, k int) int {

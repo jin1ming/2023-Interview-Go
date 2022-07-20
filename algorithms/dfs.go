@@ -3,7 +3,6 @@ package algorithms
 // 上一次学习：2022.4.7，完成
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -103,56 +102,74 @@ func solveNQueens(n int) [][]string {
 // 给定一个只包含数字的字符串，用以表示一个 IP 地址，
 // 返回所有可能从 s 获得的 有效 IP 地址。
 // 你可以按任何顺序返回答案。
-func restoreIpAddresses(s string) []string {
-	const SegCount = 4
-	var (
-		ans      []string
-		segments []int
-	)
-	var dfs func(s string, segId, segStart int)
-	dfs = func(s string, segId, segStart int) {
-		// 如果找到了 4 段 IP 地址并且遍历完了字符串，那么就是一种答案
-		if segId == SegCount {
-			if segStart == len(s) {
-				ipAddr := ""
-				for i := 0; i < SegCount; i++ {
-					ipAddr += strconv.Itoa(segments[i])
-					if i != SegCount-1 {
-						ipAddr += "."
-					}
-				}
-				ans = append(ans, ipAddr)
-			}
-			return
-		}
-
-		// 如果还没有找到 4 段 IP 地址就已经遍历完了字符串，那么提前回溯
-		if segStart == len(s) {
-			return
-		}
-		// 由于不能有前导零，如果当前数字为 0，那么这一段 IP 地址只能为 0
-		if s[segStart] == '0' {
-			segments[segId] = 0
-			dfs(s, segId+1, segStart+1)
-			return
-		}
-		// 一般情况，枚举每一种可能性并递归
-		addr := 0
-		for segEnd := segStart; segEnd < len(s); segEnd++ {
-			addr = addr*10 + int(s[segEnd]-'0')
-			if addr > 0 && addr <= 0xFF {
-				segments[segId] = addr
-				dfs(s, segId+1, segEnd+1)
-			} else {
-				break
-			}
-		}
+func restoreIpAddresses2(s string) []string {
+	var res []string
+	if len(s) < 4 {
+		return res
 	}
 
-	segments = make([]int, SegCount)
-	ans = []string{}
-	dfs(s, 0, 0)
-	return ans
+	var group [4][2]int //记录的分段，以及每段的开始和结束下表，如"123"就是[0, 3]
+	groupId := 0        //当前处于第几个段
+
+	isValid := func(left, right int) bool {
+		// 判断当前情况是否无效
+
+		if groupId > 3 { // 段分组数目不得大于4，注意第4个groupId为3
+			return false
+		}
+
+		if right > len(s) || len(s)-right > (4-groupId)*3 {
+			// 剩余长度无法容纳
+			return false
+		}
+
+		sem := s[left:right] // 字符串引用，降低开销
+		if len(sem) == 0 || len(sem) > 3 || sem[0] == '0' && len(sem) > 1 {
+			// ip段长度应该在1-3之间，且不能出现连续的0
+			return false
+		}
+		if len(sem) == 3 && sem > "255" {
+			// ip段的值不能大于255，这里可以用字符串直接比较，用strings.Compare性能会好一丢丢
+			return false
+		}
+		return true
+	}
+
+	storeRes := func() {
+		// 将数组翻译为字符串，可以通过buffer拼接来优化
+		r := s[group[0][0]:group[0][1]]
+		for i := 1; i < 4; i++ {
+			r += "." + s[group[i][0]:group[i][1]]
+		}
+		res = append(res, r)
+	}
+
+	var dfs func(left, right int)
+	dfs = func(left, right int) {
+		if !isValid(left, right) {
+			return
+		}
+		old := group[groupId]                              // 保存group环境
+		group[groupId][0], group[groupId][1] = left, right // 更新当前group情况
+
+		if right == len(s) && groupId == 3 {
+			// 走到尽头，并且使用了4个group -> 保存结果
+			storeRes()
+		}
+
+		// 选择1：将下一个字符加到当前group
+		dfs(left, right+1)
+
+		// 选择2：下一个字符开始为新的group
+		groupId++
+		dfs(right, right+1)
+		groupId--
+
+		group[groupId] = old // 恢复group环境
+	}
+
+	dfs(0, 1) // 输入为第一个字符
+	return res
 }
 
 /***** 岛屿数量 *****/

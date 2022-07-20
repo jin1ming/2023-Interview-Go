@@ -90,7 +90,6 @@ StatefulSet 为它们的每个 Pod 维护了一个有粘性的 ID。这些 Pod �
 - PersistentVolume 驱动
 - 删除/收缩StatefulSet不会删除关联的存储卷
 - 需要无头服务来负责Pod的网络标志
-- TODO: 下面不理解
 - 当删除 StatefulSets 时，StatefulSet 不提供任何终止 Pod 的保证。 为了实现 StatefulSet 中的 Pod 可以有序地且体面地终止，可以在删除之前将 StatefulSet 缩放为 0。
 - 在默认 Pod 管理策略(OrderedReady) 时使用 滚动更新，可能进入需要**人工干预**才能修复的损坏状态。
 
@@ -220,16 +219,43 @@ spec: #specification of the resource content 指定该资源的内容
     #nfs
 ```
 
+## 网络
+
+- 
+
 ## Q&A
 
 ### Pod的创建流程
 
 - 用户通过kubectl命名发起请求。
+
 - apiserver通过对应的kubeconfig进行认证，认证通过后将yaml中的pod信息存到etcd。
+
 - Controller-Manager通过apiserver的watch接口发现了pod信息的更新，执行该资源所依赖的拓扑结构整合，整合后将对应的信息交给apiserver，apiserver写到etcd，此时pod已经可以被调度了。
+
 - Scheduler同样通过apiserver的watch接口更新到pod可以被调度，通过算法给pod分配节点，并将pod和对应节点绑定的信息交给apiserver，apiserver写到etcd，然后将pod交给kubelet。
-- kubelet收到pod后，调用CNI接口给pod创建pod网络，调用CRI接口去启动容器，调用CSI进行存储卷的挂载。
+
+- kubelet收到pod后，调用CRI接口去启动容器（先创建pause容器），调用CNI接口给pod创建pod网络（pause只共享命名空间不创建网络设备），调用CSI进行存储卷的挂载。
+
+  pause容器两个作用，1.创建Linux命名空间方便之后共享，2.回收僵尸进程
+
 - 网络，容器，存储创建完成后pod创建完成，等业务进程启动后，pod运行成功
+
+### Pod出站流量
+
+- Pod到Pod
+
+  每个Pod有自己的IP地址，所有的Pod之间都可以保持三层网络的连通性。CNI就是用来实现这些网络功能的标准接口。
+
+- Pod到Service
+
+  Service就是Pod前面的4层负载均衡器。最常用的是ClusterIP，他会自动分配一个仅集群内可以访问的虚拟IP。
+
+  通过kube-proxy组件实现这些功能，每台计算节点上都运行一个kube-proxy进程，通过复杂的iptables/IPVS规则在Pod和Service之间进行各种过滤和NAT。
+
+- Pod到集群外
+
+  通过SNAT来处理。SNAT做的工作就是将数据包的源从Pod内部的IP:Port替换为宿主机的IP:Port。当数据包返回时，再将目的地址从宿主机的IP:Port替换为Pod内的IP:Port，然后发送给Pod。中间过程对Pod来说时完全透明的，他们对地址转换不会有任何感知。
 
 ### Service流量转发过程
 

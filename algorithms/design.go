@@ -24,6 +24,7 @@ func Constructor4() StreamRank {
 }
 
 func lowbit(x int) int {
+	// 二进制里最低位1
 	return x & -x
 }
 

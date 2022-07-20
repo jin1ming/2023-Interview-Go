@@ -1,6 +1,8 @@
 package algorithms
 
-// 上一次学习：2022.2.24，完成
+import "math/bits"
+
+// 上一次学习：2022.7.20
 
 /***** 只出现一次的数字 *****/
 // 给定一个非空整数数组，除了某个元素只出现一次以外，
@@ -17,17 +19,9 @@ func singleNumber(nums []int) int {
 
 /***** 汉明距离 *****/
 func hammingDistance(x int, y int) int {
-	xor := x ^ y
 	// 先对x、y进行异或，找出二进制下不同的值
 	// 不同的即为1， 统计1出现的次数即可
-	res := 0
-	for xor != 0 {
-		if xor%2 == 1 {
-			res++
-		}
-		xor >>= 1
-	}
-	return res
+	return bits.OnesCount(uint(x ^ y))
 }
 
 /***** 两整数之和 *****/
