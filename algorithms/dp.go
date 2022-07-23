@@ -280,3 +280,35 @@ func maxProduct2(nums []int) int {
 	}
 	return ans
 }
+
+/***** 最长有效括号 *****/
+// 给你一个只包含 '(' 和 ')' 的字符串
+// 找出最长有效（格式正确且连续）括号子串的长度。
+func longestValidParentheses(s string) int {
+	maxAns := 0
+	dp := make([]int, len(s))
+	for i := 1; i < len(s); i++ {
+		if s[i] == ')' {
+			if s[i-1] == '(' {
+				// 找同级关系的一串字串，然后合并
+				if i >= 2 {
+					dp[i] = dp[i-2] + 2
+				} else {
+					dp[i] = 2
+				}
+			} else if i-dp[i-1] > 0 && s[i-dp[i-1]-1] == '(' {
+				// 找下一级的子串，注意这里的子串已经合并过
+				// i-dp[i-1]是子串left，子串的left必须是'('
+				if i-dp[i-1] >= 2 {
+					// 子串旁边可能有别的子串
+					// dp[i-dp[i-1]-2]代表着子串左侧的字串
+					dp[i] = dp[i-1] + dp[i-dp[i-1]-2] + 2
+				} else {
+					dp[i] = dp[i-1] + 2
+				}
+			}
+			maxAns = max(maxAns, dp[i])
+		}
+	}
+	return maxAns
+}

@@ -230,3 +230,122 @@ func flatten2(root *Node) *Node {
 	dummyHead.Next.Prev = nil
 	return dummyHead.Next
 }
+
+func mergeList2(head1, head2 *ListNode) *ListNode {
+	dummyHead := &ListNode{}
+	temp, temp1, temp2 := dummyHead, head1, head2
+	for temp1 != nil && temp2 != nil {
+		if temp1.Val <= temp2.Val {
+			temp.Next = temp1
+			temp1 = temp1.Next
+		} else {
+			temp.Next = temp2
+			temp2 = temp2.Next
+		}
+		temp = temp.Next
+	}
+	if temp1 != nil {
+		temp.Next = temp1
+	} else if temp2 != nil {
+		temp.Next = temp2
+	}
+	return dummyHead.Next
+}
+
+func sortList(head *ListNode) *ListNode {
+	if head == nil {
+		return head
+	}
+
+	length := 0
+	for node := head; node != nil; node = node.Next {
+		length++
+	}
+
+	dummyHead := &ListNode{Next: head}
+	for subLength := 1; subLength < length; subLength <<= 1 {
+		prev, cur := dummyHead, dummyHead.Next
+		for cur != nil {
+			head1 := cur
+			for i := 1; i < subLength && cur.Next != nil; i++ {
+				cur = cur.Next
+			}
+
+			head2 := cur.Next
+			cur.Next = nil
+			cur = head2
+			for i := 1; i < subLength && cur != nil && cur.Next != nil; i++ {
+				cur = cur.Next
+			}
+
+			var next *ListNode
+			if cur != nil {
+				next = cur.Next
+				cur.Next = nil
+			}
+
+			prev.Next = mergeList2(head1, head2)
+
+			for prev.Next != nil {
+				prev = prev.Next
+			}
+			cur = next
+		}
+	}
+	return dummyHead.Next
+}
+
+func cutList(head *ListNode) *ListNode {
+	slow := head
+	fast := head
+	preSlow := slow
+	for fast != nil && fast.Next != nil {
+		preSlow = slow
+		slow = slow.Next
+		fast = fast.Next.Next
+	}
+	preSlow.Next = nil
+	return slow
+}
+
+func mergeList3(l, r *ListNode) *ListNode {
+	if l == nil {
+		return r
+	}
+	if r == nil {
+		return l
+	}
+
+	head := &ListNode{}
+	cur := head
+	for l != nil && r != nil {
+		if l.Val < r.Val {
+			cur.Next = l
+			cur = l
+			l = l.Next
+		} else {
+			cur.Next = r
+			cur = r
+			r = r.Next
+		}
+	}
+
+	if l != nil {
+		cur.Next = l
+	}
+	if r != nil {
+		cur.Next = r
+	}
+
+	return head.Next
+}
+
+func sortList2(head *ListNode) *ListNode {
+	if head == nil || head.Next == nil {
+		return head
+	}
+	mid := cutList(head)
+	l := sortList(head)
+	r := sortList(mid)
+	return mergeList3(l, r)
+}
