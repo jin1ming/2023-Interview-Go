@@ -37,7 +37,7 @@ RPC即远程过程调用，它帮助我们屏蔽网络编程细节，实现调�
 
 - 编码：默认gob，go独有，故不支持跨语言
 
-  可选json(net/rpc/jsonrpc)来支持跨语言（不支持HTTP）
+  可选json(net/rpc/jsonrpc)来支持跨语言（json不支持HTTP）
 
   - 服务端：
 
@@ -163,6 +163,52 @@ GRPC基于HTTP/2标准设计，带来诸如双向流、流控、头部压缩、�
 - 4种调用方式
 
   一元RPC、服务端流式RPC、客户端流式RPC、双向流式RPC
+  
+  ```protobuf
+  service HelloService {
+    // 一元 RPC
+    rpc SayHello(HelloRequest) returns (HelloResponse){}
+  
+    // 服务端流式RPC
+    rpc LotsOfReplies(HelloRequest) returns (stream HelloResponse){}
+  
+    // 客户端流式RPC
+    rpc LotsOfGreetings(stream HelloRequest) returns (HelloResponse){}
+  
+    // 双向流式RPC
+    rpc BidiHello(stream HelloRequest) returns (stream HelloResponse){}
+  
+  }
+  ```
+  
+  ```go
+  // 客户端interface
+  type HelloServiceClient interface {
+          // 一元 RPC
+          SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloResponse, error)
+          // 服务端流式RPC
+          LotsOfReplies(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (HelloService_LotsOfRepliesClient, error)
+          // 客户端流式RPC
+          LotsOfGreetings(ctx context.Context, opts ...grpc.CallOption) (HelloService_LotsOfGreetingsClient, error)
+          // 双向流式RPC
+          BidiHello(ctx context.Context, opts ...grpc.CallOption) (HelloService_BidiHelloClient, error)
+  }
+  
+  // 服务端interface
+  type HelloServiceServer interface {
+          // 一元 RPC
+          SayHello(context.Context, *HelloRequest) (*HelloResponse, error)
+          // 服务端流式RPC
+          LotsOfReplies(*HelloRequest, HelloService_LotsOfRepliesServer) error
+          // 客户端流式RPC
+          LotsOfGreetings(HelloService_LotsOfGreetingsServer) error
+          // 双向流式RPC
+          BidiHello(HelloService_BidiHelloServer) error
+          mustEmbedUnimplementedHelloServiceServer()
+  }
+  ```
+  
+  
 
 ## Q&A
 

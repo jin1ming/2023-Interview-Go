@@ -948,8 +948,3 @@ WebSocket 的握手是一个标准的 HTTP GET 请求，但要带上两个协议
 https://zq99299.github.io/note-book2/http-protocol/
 
 https://www.zhihu.com/question/52493697
-
-
-
-
-
