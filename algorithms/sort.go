@@ -121,3 +121,22 @@ func lexicalOrder(n int) []int {
 	dfs(1)
 	return res
 }
+
+/***** 数组归置 *****/
+// 使得数组负数在左，正数在右，0在中间
+func numsSwap(nums []int) {
+	if len(nums) < 2 {
+		return
+	}
+	left := 0
+	right := len(nums) - 1
+	for i, k := range nums {
+		if k < 0 {
+			nums[i], nums[left] = nums[left], nums[i]
+			left++
+		} else if k > 0 {
+			nums[i], nums[right] = nums[right], nums[i]
+			right--
+		}
+	}
+}
