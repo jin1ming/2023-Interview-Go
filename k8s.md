@@ -219,10 +219,6 @@ spec: #specification of the resource content 指定该资源的内容
     #nfs
 ```
 
-## 网络
-
-- 
-
 ## Q&A
 
 ### Pod的创建流程
@@ -296,8 +292,6 @@ spec: #specification of the resource content 指定该资源的内容
 `watch`通过`http长链接`来实现快速检测变更。使用的`Chunked transfer encoding(分块传输编码)`，出现于HTTP/1.1，即response`的`HTTP Header`中设置`Transfer-Encoding`的值为`chunked。服务器会返回所提供的 `resourceVersion` 之后发生的所有变更（创建、删除和更新）。
 
 > HTTP 分块传输编码允许服务器为动态生成的内容维持 HTTP 持久链接。通常，持久链接需要服务器在开始发送消息体前发送Content-Length消息头字段，但是对于动态生成的内容来说，在内容创建完之前是不可知的。使用分块传输编码，数据分解成一系列数据块，并以一个或多个块发送，这样服务器可以发送数据而不需要预先知道发送内容的总大小。
-
-### Pod启动失败的情况
 
 ### k8s开发系统上线前夕要做些什么
 
@@ -374,3 +368,32 @@ iptables的底层实现是**netfilter**，其架构是在整个网络流程的�
   - RETURN：跳出当前链，该链后续规则不再执行。
   - ACCEPT：统一数据包通过，继续执行后续的规则。
   - JUMP：跳转到其他用户自定义的链继续执行。
+
+### Deployment、DaemonSet、StatefulSet更新策略
+
+- Deployment
+
+  可以实时修改Deployment的内容并应用，k8s自动完成更新，更新发生错误可以用Rollback恢复版本
+
+  支持两种更新策略：
+
+  - **Recreate**：重建，spec.strategy.type=Recreate 表示Deployment会在更新Pod时先杀掉所有正在运行的Pod然后创建新Pod
+  - **Rolling Update**：滚动更新 spec.strategy.type=RollingUpdate, 通过滚动更新的方式逐个更新Pod。
+    - maxUnavailable 最大不可用：spec.strategy.type.RollingUpdate.MaxUnavailable 用于指定更新过程中不可用状态Pod数量的上限。 可整数可百分比
+    - maxSurge最大超出： spec.strategy.type.RollingUpdate.MaxSurge 用于指定更新过程中Pod总数超过Pod期望副本数量部分的最大值。可整数可百分比
+
+  使用 rollout history 检查 deploy的历史记录 --revision 制定版本
+  使用 rollout undo 回滚到上个部署版本， 加 参数-to-revision 指定回滚版本
+
+- StatefulSet
+
+  3种升级策略：
+
+  - **OnDelete** ： 默认升级策略，在创建好新的StatefulSetSet配置之后，新的Pod不会被自动创建，**用户需要手动删除旧版本的Pod**，才出发新建操作。
+  - **RollingUpdate**： StatefulSet 控制器将删除并重新创建 StatefulSet 中的每个 Pod。它将按照与 Pod 终止相同的顺序进行（从最大的序数到最小的），依次更新每个 Pod。Kubernetes 控制平面会等到更新的 Pod 运行并准备好，然后再更新其前任。如果您已设置.spec.minReadySeconds（请参阅“最小就绪秒数”），则控制平面会在 Pod 准备就绪后额外等待该时间，然后再继续。
+  - **partitioned**：分区滚动更新。如果指定了分区，则在更新 StatefulSet 时，将更新序数大于或等于该分区的所有 Pod .spec.template。所有序号小于分区的 Pod 都不会更新，即使删除了，也会在之前的版本中重新创建。如果 StatefulSet 的.spec.updateStrategy.rollingUpdate.partition大于其.spec.replicas，则对其的更新.spec.template将不会传播到其 Pod。在大多数情况下，您不需要使用分区，但如果您想要暂存更新、roll out Canary 或执行分阶段roll out，它们会很有用
+
+- DaemonSet
+
+  - **OnDelete** ： 默认升级策略，在创建好新的DaemonSet配置之后，新的Pod不会被自动创建，用户需要手动删除旧版本的Pod，才出发新建操作。
+  - **RollingUpdate**： 旧版本的POD 将被自动杀掉，然后自动创建新版的DaemonSet Pod。与Deployment 不同为不支持查看和管理DaemonSet的更新记录；回滚操作是通过再次提交旧版本配置而不是 rollback命令实现
