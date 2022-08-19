@@ -312,3 +312,18 @@ func longestValidParentheses(s string) int {
 	}
 	return maxAns
 }
+
+/***** 可被3整除的最大和 *****/
+// 给你一个整数数组 nums，请你找出并返回能被三整除的元素最大和。
+func maxSumDivThree(nums []int) int {
+	rest := [3]int{}
+	for _, num := range nums {
+		a := rest[0] + num
+		b := rest[1] + num
+		c := rest[2] + num
+		rest[a%3] = max(rest[a%3], a)
+		rest[b%3] = max(rest[b%3], b)
+		rest[c%3] = max(rest[c%3], c)
+	}
+	return rest[0]
+}

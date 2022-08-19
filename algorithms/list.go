@@ -231,6 +231,31 @@ func flatten2(root *Node) *Node {
 	return dummyHead.Next
 }
 
+/***** 旋转链表 *****/
+func rotateRight(head *ListNode, k int) *ListNode {
+	if k == 0 || head == nil || head.Next == nil {
+		return head
+	}
+	length := 1
+	iter := head
+	for iter.Next != nil {
+		iter = iter.Next
+		length++
+	}
+	add := length - k%length
+	if add == length {
+		return head
+	}
+	iter.Next = head
+	for add > 0 {
+		iter = iter.Next
+		add--
+	}
+	ret := iter.Next
+	iter.Next = nil
+	return ret
+}
+
 func mergeList2(head1, head2 *ListNode) *ListNode {
 	dummyHead := &ListNode{}
 	temp, temp1, temp2 := dummyHead, head1, head2
