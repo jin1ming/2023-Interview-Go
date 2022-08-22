@@ -1,10 +1,50 @@
 [TOC]
 
+## Q&A
+
+- 如何借助宿主机上工具排查问题？考察命名空间
+
+  kubectl debug、nsenter
+
+- docker镜像的构建方法
+
+  基于已有镜像创建：对容器进行docker commit
+
+  基于本地模板创建：导入操作系统模板
+
+  基于Dockerfile 
+
+- 容器间通信：
+
+  none（容器网络堆栈）、host（主机网络堆栈）、default bridge（IP地址链接）、自定义网桥
+
+  容器IP、宿主机IP、link、User-defined networks（桥接网络）
+
+- 容器与宿主机一个网段该怎么实现？
+
+  macvlan的原理是在宿主机物理网卡上虚拟出多个子网卡，通过不同的MAC地址在数据链路层进行网络数据转发的，它是比较新的网络虚拟化技术，需要较新的内核支持（Linux kernel v3.9–3.19 and 4.0+）
+
+- 原生docker缺点：
+
+  组网主要是单主机模式，不支持热迁移（地址漂移、不在同一网段）
+
+- CMD 和 ENTRYPOINT 的区别
+
+  ENTRYPOINT 主要是固化镜像，把执行命令以及不会变动的参数写入这
+
+  CMD的参数会被覆盖，把需要变动的参数写在这
+
+  ```shell
+  ENTRYPOINT  ["top", "-b"]
+  CMD  ["-c"]
+  ```
+
 ## Dockerfile
 
 - 结构
-  - 基础镜像信息、维护者信息、镜像操作指令、容器启动时执行指令
-
+  
+- 基础镜像信息、维护者信息、镜像操作指令、容器启动时执行指令
+  
 - 指令：
 
   FROM、MAINTAINER、RUN、CMD、EXPOSE、ENV、ADD、COPY、ENTRYPOINT、VOLUME、USER、WORKDIR、ONBUILD
@@ -14,6 +54,20 @@
   RUN：在镜像基础上执行命令，提交为新的镜像
 
   CMD：容器启动时执行的命令，每个Dockerfile只能有一个，如果存在多个只执行最后一个
+
+  > 第一种用法：运行一个可执行的文件并提供参数。
+  >
+  > 第二种用法：为ENTRYPOINT指定参数。
+  >
+  > 第三种用法(shell form)：是以”/bin/sh -c”的方法执行的命令，这种sh是PID=1
+  >
+  > **要避免shell方式**，sh/bash 进程没有提供 SIGTERM 的处理。所以当向该容器发送 SIGTERM 信号时，/bin/sh 主进程并没有 SIGTERM 信号的处理逻辑，也就是直接忽略了 SIGTERM 信号，这样就导致容器无法正常关闭，也就是无法完成 “优雅退出” ，默认等待 10s 之后，由 docker daemon 发送 SIGKILL 信号，强制关闭主进程，其子进程也被立即销毁，
+  >
+  > `docker run --init` 仅解决了容器的 **优雅退出**，而没有解决真正的主服务程序无法接收 `SIGTERM` 信号的问题。
+  >
+  > 加exec解决：CMD exec /usr/bin/redis-server
+  >
+  > 另外，`docker run`命令如果指定了参数会把CMD里的参数覆盖
 
   EXPOSE：告诉服务器暴露的端口，供外部连接使用
 
@@ -33,8 +87,6 @@
 
   ONBUILD：命令出现的Dockerfile里不会执行指令，但被其他Dockerfile所引用的时候会执行
 
-  
-
 - 镜像分层构建
 
   - Dockerfile中每个指令都会创建一个新的镜像层
@@ -42,7 +94,6 @@
   - 当Dockerfile的指令修改了，复制的文件变化了，或者构建镜像时指定的变量不同了，对应的缓存就会失效
   - 某一层的镜像缓存失效后，它之后的镜像层缓存就会都失效
   - 镜像层是不可变的，即便下一层删除某个文件，其镜像中仍然会包含该文件
-  
   
 
 ## 原理
@@ -63,18 +114,10 @@
 ```bash
 # 获取容器ID
 docker ps
-
 # 获取容器对应的进程PID
 docker inspect f604f0e34bc2
-
 # 查询PID对应的ns信息
 ls -l /proc/58212/ns 
-lrwxrwxrwx 1 root root 0 Jul 16 19:19 ipc -> ipc:[4026532278]
-lrwxrwxrwx 1 root root 0 Jul 16 19:19 mnt -> mnt:[4026532276]
-lrwxrwxrwx 1 root root 0 Jul 16 01:43 net -> net:[4026532281]
-lrwxrwxrwx 1 root root 0 Jul 16 19:19 pid -> pid:[4026532279]
-lrwxrwxrwx 1 root root 0 Jul 16 19:19 user -> user:[4026531837]
-lrwxrwxrwx 1 root root 0 Jul 16 19:19 uts -> uts:[4026532277]
 ```
 
 操作Namespace的方式如下：
@@ -85,17 +128,6 @@ nsenter --target 58212 --mount --uts --ipc --net --pid -- env --ignore-environme
 
 # 离开当前ns，并加入新的ns
 unshare --mount --ipc --pid --net --mount-proc=/proc --fork /bin/bash
-
-# 创建子进程，并将子进程放到新的ns中。父进程不变
-# arg可选：CLONE_NEWUTS、CLONE_NEWUSER、CLONE_NEWNS、CLONE_NEWPID。CLONE_NEWNET
-int clone(int (*fn)(void *), void *child_stack, int flags, void *arg);
-
-# 将当前进程放到已有的ns中
-# nstype 用来指定 namespace 的类型，可以设置为 CLONE_NEWUTS、CLONE_NEWUSER、CLONE_NEWNS、CLONE_NEWPID 和 CLONE_NEWNET
-int setns(int fd, int nstype);
-
-# 使当前进程退出当前的 namespace，并加入到新创建的namespace中
-int unshare(int flags);
 ```
 
 ### CGroups
@@ -111,29 +143,23 @@ int unshare(int flags);
 - net_cls：标记 cgroups 中进程的网络数据包，然后可以使用 tc 模块（traffic control）对数据包进行控制。
 - freezer：可以挂起或者恢复 cgroups 中的进程
 
-在 Linux 上，为了操作 Cgroup，有一个专门的 Cgroup 文件系统，位于/sys/fs/cgroup/目录下。目录结构如下所示：
-
-```
-drwxr-xr-x 5 root root  0 May 30 17:00 blkio
-lrwxrwxrwx 1 root root 11 May 30 17:00 cpu -> cpu,cpuacct
-lrwxrwxrwx 1 root root 11 May 30 17:00 cpuacct -> cpu,cpuacct
-drwxr-xr-x 5 root root  0 May 30 17:00 cpu,cpuacct
-drwxr-xr-x 3 root root  0 May 30 17:00 cpuset
-drwxr-xr-x 5 root root  0 May 30 17:00 devices
-drwxr-xr-x 3 root root  0 May 30 17:00 freezer
-drwxr-xr-x 3 root root  0 May 30 17:00 hugetlb
-drwxr-xr-x 5 root root  0 May 30 17:00 memory
-lrwxrwxrwx 1 root root 16 May 30 17:00 net_cls -> net_cls,net_prio
-drwxr-xr-x 3 root root  0 May 30 17:00 net_cls,net_prio
-lrwxrwxrwx 1 root root 16 May 30 17:00 net_prio -> net_cls,net_prio
-drwxr-xr-x 3 root root  0 May 30 17:00 perf_event
-drwxr-xr-x 5 root root  0 May 30 17:00 pids
-drwxr-xr-x 5 root root  0 May 30 17:00 systemd
-```
+在 Linux 上，为了操作 Cgroup，有一个专门的 Cgroup 文件系统，位于/sys/fs/cgroup/目录下。目录结构如下所示：blkio、cpu -> cpu,cpuacct、cpuacct -> cpu,cpuacct、cpu,cpuacct、cpuset、devices、freezer、hugetlb、memory、net_cls -> net_cls,net_prio、net_cls,net_prio、net_prio -> net_cls,net_prio、perf_event、pids、systemd
 
 Docker操作CGroups的方式如下图所示：
 
 ![下载 (assets/下载 (4).png)](assets/下载 (4).png)
+
+### **联合文件系统（Union File System，Unionfs）**
+
+联合文件系统（Union File System，Unionfs）是一种分层的轻量级文件系统，它可以把多个目录内容联合挂载到同一目录下，从而形成一个单一的文件系统，这种特性可以让使用者像是使用一个目录一样使用联合文件系统。
+
+Docker 中最常用的联合文件系统有三种：AUFS、Devicemapper 和 OverlayFS。
+
+　　AUFS 目前并未被合并到 Linux 内核主线，因此只有 Ubuntu 和 Debian 等少数操作系统支持 AUFS。它在主机上使用多层目录存储。
+
+　　相比对文件系统加锁的机制，Devicemapper 工作在块级别，因此可以实现同时修改和读写层中的多个块设备，比AUFS文件系统效率更高。
+
+　　通常情况下， overlay2 会比 AUFS 和 Devicemapper 性能更好，而且更加稳定，因为 overlay2 在 inode 优化上更加高效。因此在生产环境中推荐使用 overlay2 作为 Docker 的文件驱动。
 
 ## Docker网络模型
 
@@ -217,30 +243,3 @@ PS: 二层网络=核心层+接入层。三层网络=二层网络+汇聚层
 
 三层网络可以组件大型网络，汇聚层在两层之间承担传输媒介的作用，需具备以下功能：实施安全功能（划分VLAN和配置ACL）、工作组整体接入功能、虚拟网络过滤功能。
 
-## Q&A
-
-- 如何借助宿主机上工具排查问题？考察命名空间
-
-  kubectl debug、nsenter
-
-- docker镜像的构建方法
-
-  基于已有镜像创建：对容器进行docker commit
-
-  基于本地模板创建：导入操作系统模板
-
-  基于Dockerfile 
-
-- 容器间通信：
-
-  none（容器网络堆栈）、host（主机网络堆栈）、default bridge（IP地址链接）、自定义网桥
-
-  容器IP、宿主机IP、link、User-defined networks（桥接网络）
-
-- 容器与宿主机一个网段该怎么实现？
-
-  macvlan的原理是在宿主机物理网卡上虚拟出多个子网卡，通过不同的MAC地址在数据链路层进行网络数据转发的，它是比较新的网络虚拟化技术，需要较新的内核支持（Linux kernel v3.9–3.19 and 4.0+）
-  
-- 原生docker缺点：
-
-  组网主要是单主机模式，不支持热迁移（地址漂移、不在同一网段）

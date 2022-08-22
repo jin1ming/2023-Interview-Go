@@ -129,8 +129,6 @@ CronJob 创建基于时隔重复调度的 Jobs。
 # * * * * *
 ```
 
-
-
 ## yaml属性
 
 ​	只使用Maps、Lists结构。
@@ -140,86 +138,14 @@ CronJob 创建基于时隔重复调度的 Jobs。
 - metadata：包含Pod的一些meta信息，比如name、namespace、label等信息。
 - spec：包括一些container，storage，volume以及其他Kubernetes需要的参数，以及诸如是否在容器失败时重新启动容器的属性。可在特定Kubernetes API找到完整的Kubernetes Pod的属性。
 
-​	示例：
-
-```yaml
-#test-pod 
-apiVersion: v1 #指定api版本，此值必须在kubectl apiversion中   
-kind: Pod #指定创建资源的角色/类型   
-metadata: #资源的元数据/属性   
-  name: test-pod #资源的名字，在同一个namespace中必须唯一   
-  labels: #设定资源的标签 
-    k8s-app: apache   
-    version: v1   
-    kubernetes.io/cluster-service: "true"   
-  annotations:            #自定义注解列表   
-    - name: String        #自定义注解名字   
-spec: #specification of the resource content 指定该资源的内容   
-  restartPolicy: Always #表明该容器一直运行，默认k8s的策略，在此容器退出后，会立即创建一个相同的容器   
-  nodeSelector:     #节点选择，先给主机打标签kubectl label nodes kube-node1 zone=node1   
-    zone: node1   
-  containers:   
-  - name: test-pod #容器的名字   
-    image: 10.192.21.18:5000/test/chat:latest #容器使用的镜像地址   
-    imagePullPolicy: Never #三个选择Always、Never、IfNotPresent，每次启动时检查和更新（从registery）images的策略， 
-                           # Always，每次都检查，默认策略
-                           # Never，每次都不检查（不管本地是否有） 
-                           # IfNotPresent，如果本地有就不检查，如果没有就拉取 
-    command: ['sh'] #启动容器的运行命令，将覆盖容器中的Entrypoint,对应Dockefile中的ENTRYPOINT   
-    args: ["$(str)"] #启动容器的命令参数，对应Dockerfile中CMD参数   
-    env: #指定容器中的环境变量   
-    - name: str #变量的名字   
-      value: "/etc/run.sh" #变量的值   
-    resources: #资源管理 
-      requests: #容器运行时，最低资源需求，也就是说最少需要多少资源容器才能正常运行   
-        cpu: 0.1 #CPU资源（核数），两种方式，浮点数或者是整数+m，0.1=100m，最少值为0.001核（1m） 
-        memory: 32Mi #内存使用量   
-      limits: #资源限制   
-        cpu: 0.5   
-        memory: 1000Mi   
-    ports:   
-    - containerPort: 80 #容器开发对外的端口 
-      name: httpd  #名称 
-      protocol: TCP   
-    livenessProbe: #pod内容器健康检查的设置 
-      httpGet: #通过httpget检查健康，返回200-399之间，则认为容器正常   
-        path: / #URI地址   
-        port: 80   
-        #host: 127.0.0.1 #主机地址   
-        scheme: HTTP   
-      initialDelaySeconds: 180 #表明第一次检测在容器启动后多长时间后开始   
-      timeoutSeconds: 5 #检测的超时时间   
-      periodSeconds: 15  #检查间隔时间   
-      #也可以用这种方法   
-      #exec: 执行命令的方法进行监测，如果其退出码不为0，则认为容器正常   
-      #  command:   
-      #    - cat   
-      #    - /tmp/health   
-      #也可以用这种方法   
-      #tcpSocket: //通过tcpSocket检查健康    
-      #  port: number    
-    lifecycle: #生命周期管理   
-      postStart: #容器运行之前运行的任务   
-        exec:   
-          command:   
-            - 'sh'   
-            - 'yum upgrade -y'   
-      preStop:#容器关闭之前运行的任务   
-        exec:   
-          command: ['service httpd stop']   
-    volumeMounts:  #挂载持久存储卷 
-    - name: volume #挂载设备的名字，与volumes[*].name 需要对应     
-      mountPath: /data #挂载到容器的某个路径下   
-      readOnly: True   
-  volumes: #定义一组挂载设备   
-  - name: volume #定义一个挂载设备的名字   
-    #meptyDir: {}   
-    hostPath:   
-      path: /opt #挂载设备类型为hostPath，路径为宿主机下的/opt,这里设备类型支持很多种 
-    #nfs
-```
-
 ## Q&A
+
+### 为什么需要Pod
+
+解决“进程组”的运行问题；Pod是个逻辑单位；容器的本质实际上是一个进程，是一个视图被隔离，资源受限的进程。
+
+1. 解耦合
+2. 原子调度单位，方便管理
 
 ### Pod的创建流程
 
@@ -236,6 +162,64 @@ spec: #specification of the resource content 指定该资源的内容
   pause容器两个作用，1.创建Linux命名空间方便之后共享，2.回收僵尸进程
 
 - 网络，容器，存储创建完成后pod创建完成，等业务进程启动后，pod运行成功
+
+### Pod生命周期
+
+主要过程：**创建->初始化->运行->终止**
+
+**5种状态（Phase）**：pod自身的初始化过程
+
+- Pending（挂起）：Pod 已被 Kubernetes 系统接受，但有一个或者多个容器尚未创建亦未运行。此阶段包括等待 Pod 被调度的时间和通过网络下载镜像的时间
+- Running（运行中）：Pod 已经绑定到了某个节点，Pod 中所有的容器都已被创建。至少有一个容器仍在运行，或者正处于启动或重启状态。
+- Succeeded（成功）：Pod 中的所有容器都已成功终止，并且不会再重启。
+- Failed（失败）：Pod 中的所有容器都已终止，并且至少有一个容器是因为失败终止。也就是说，容器以非 0 状态退出或者被系统终止。
+- Unknown（未知）：因为某些原因无法取得 Pod 的状态。这种情况通常是因为与 Pod 所在主机通信失败。
+
+**Pod状况（PodConditionType）**：pod被调度相关的状况 
+
+- PodScheduled：Pod 已经被调度到某节点；
+
+- ContainersReady：Pod 中所有容器都已就绪；
+
+  可以针对 Pod 就绪态设置定制的 Pod 状况
+
+- Initialized：所有的 Init 容器 都已成功完成；
+
+- Ready：Pod 可以为请求提供服务，并且应该被添加到对应服务的负载均衡池中。
+
+**容器状态**： Waiting、Running、Terminated
+
+``kubectl describe pod <pod 名称>``可以输出每个容器的状态
+
+可以使用[容器生命周期回调](https://kubernetes.io/zh-cn/docs/concepts/containers/container-lifecycle-hooks/) 来在容器生命周期中的特定时间点触发事件
+
+**容器探针**：probe 是由 [kubelet](https://kubernetes.io/zh-cn/docs/reference/command-line-tools-reference/kubelet/) 对容器执行的定期诊断。 要执行诊断，kubelet 既可以在容器内执行代码，也可以发出一个网络请求。
+
+- 类型：启动探针startupProbe、存活探针livenessProbe、就绪探针readinessProbe
+- 检查机制：exec->0、grpc->SERVING、httpGet->[200,400)、tcpSocket->port
+- 探测结果：Success、Failure、Unknow
+
+**容器重启策略**:  Always、OnFailure 和 Never。默认值是 Always。
+
+### Pod的终止流程
+
+1. 用户向apiserver发送删除pod对象的命令
+
+2. apiserver中的pod对象信息会随着时间的推移而更新，在宽限期内（默认是30s），pod被视为dead
+
+3. 将pod标记为terminating（正在删除）状态
+
+4. kubelet在监控到pod对象转为terminating状态的同时启动pod关闭过程
+
+5. 端点控制器监控到pod对象的关闭行为时将其从所有匹配到此端点的service资源的端点列表中移除
+
+6. 如果当前pod对象定义了 preStop钩子处理器，则在其标记为terminating后即会以同步的方式启动执行
+
+7. pod对象中的容器进程收到停止信号
+
+8. 宽限期结束后，若pod中还存在仍在运行的进程，那么pod对象会收到立即终止的信号
+
+9. kubelet请求apiserver将此pod资源的宽限期设置为0，从而完成删除操作，此时pod对于用户已不可见
 
 ### Pod出站流量
 
