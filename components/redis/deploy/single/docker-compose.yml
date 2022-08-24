@@ -1,0 +1,13 @@
+version: '3'
+services:
+    redis-master:
+        image: redis:6.2
+        container_name: redis-master
+        restart: always
+        ports:
+        - 6379:6379
+        volumes: 
+        - ./data:/data
+        - ./conf/redis.conf:/etc/redis/redis.conf
+        - ./3rd-modules:/modules
+        command: redis-server /etc/redis/redis.conf --loadmodule /modules/redisbloom.so --loadmodule /modules/libredis_cell.so --loadmodule /modules/redistimeseries.so 
