@@ -183,3 +183,46 @@ out:
 	}
 	return result
 }
+
+/***** 最小覆盖子串 *****/
+// 给你一个字符串 s 、一个字符串 t 。返回 s 中涵盖 t 所有字符的最小子串。
+// 如果 s 中不存在涵盖 t 所有字符的子串，则返回空字符串 "" 。
+func minWindow2(s string, t string) string {
+	tMap := make(map[byte]int)
+	sMap := make(map[byte]int)
+	for _, c := range []byte(t) {
+		tMap[c]++
+	}
+
+	res := ""
+	left := 0
+
+	isValid := func(ch byte) bool {
+		for k, v := range tMap {
+			if sMap[k] < v {
+				return false
+			}
+		}
+		return true
+	}
+
+	for right := 0; right < len(s); right++ {
+		ch := s[right]
+		if _, ok := tMap[ch]; !ok {
+			continue
+		}
+		sMap[ch]++
+		if isValid(ch) {
+			for tMap[s[left]] == 0 || sMap[s[left]] > tMap[s[left]] {
+				sMap[s[left]]--
+				left++
+			}
+			if len(res) == 0 || len(res) > right-left+1 {
+				res = s[left : right+1]
+			}
+			sMap[s[left]]--
+			left++
+		}
+	}
+	return res
+}
