@@ -36,3 +36,27 @@ func getSum(a int, b int) int {
 	}
 	return a
 }
+
+/***** 1～n 整数中 1 出现的次数 *****/
+func countDigitOne(n int) int {
+	var cur, res, high, digit, low int
+	high = n / 10
+	cur = n % 10
+	digit = 1
+
+	for high > 0 || cur > 0 {
+		switch cur {
+		case 0:
+			res += high * digit // 只看高位
+		case 1:
+			res += high*digit + low + 1 // 高位 + low+1 (0-low)
+		default:
+			res += high*digit + digit
+		}
+		cur = high % 10
+		low = n - high*digit*10
+		digit *= 10
+		high /= 10
+	}
+	return res
+}
