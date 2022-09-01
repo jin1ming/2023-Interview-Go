@@ -256,40 +256,24 @@ func rotateRight(head *ListNode, k int) *ListNode {
 	return ret
 }
 
-func mergeList2(head1, head2 *ListNode) *ListNode {
-	dummyHead := &ListNode{}
-	temp, temp1, temp2 := dummyHead, head1, head2
-	for temp1 != nil && temp2 != nil {
-		if temp1.Val <= temp2.Val {
-			temp.Next = temp1
-			temp1 = temp1.Next
-		} else {
-			temp.Next = temp2
-			temp2 = temp2.Next
-		}
-		temp = temp.Next
-	}
-	if temp1 != nil {
-		temp.Next = temp1
-	} else if temp2 != nil {
-		temp.Next = temp2
-	}
-	return dummyHead.Next
-}
-
+/***** 链表排序 *****/
 func sortList(head *ListNode) *ListNode {
 	if head == nil {
 		return head
 	}
 
 	length := 0
+	// 获取List长度
 	for node := head; node != nil; node = node.Next {
 		length++
 	}
 
 	dummyHead := &ListNode{Next: head}
+	// 遍历直到subLength增长到length
 	for subLength := 1; subLength < length; subLength <<= 1 {
+		// 重置为开头
 		prev, cur := dummyHead, dummyHead.Next
+		// 每次两小段合并，直到走完
 		for cur != nil {
 			head1 := cur
 			for i := 1; i < subLength && cur.Next != nil; i++ {
@@ -308,7 +292,7 @@ func sortList(head *ListNode) *ListNode {
 				next = cur.Next
 				cur.Next = nil
 			}
-
+			// 把刚刚拆下来的两小段重新装回去
 			prev.Next = mergeList2(head1, head2)
 
 			for prev.Next != nil {
@@ -320,57 +304,42 @@ func sortList(head *ListNode) *ListNode {
 	return dummyHead.Next
 }
 
-func cutList(head *ListNode) *ListNode {
-	slow := head
-	fast := head
-	preSlow := slow
-	for fast != nil && fast.Next != nil {
-		preSlow = slow
-		slow = slow.Next
-		fast = fast.Next.Next
-	}
-	preSlow.Next = nil
-	return slow
-}
-
-func mergeList3(l, r *ListNode) *ListNode {
-	if l == nil {
-		return r
-	}
-	if r == nil {
-		return l
-	}
-
-	head := &ListNode{}
-	cur := head
-	for l != nil && r != nil {
-		if l.Val < r.Val {
-			cur.Next = l
-			cur = l
-			l = l.Next
+func mergeList2(head1, head2 *ListNode) *ListNode {
+	dummyHead := &ListNode{}
+	p := dummyHead
+	for head1 != nil && head2 != nil {
+		if head1.Val <= head2.Val {
+			p.Next = head1
+			head1 = head1.Next
 		} else {
-			cur.Next = r
-			cur = r
-			r = r.Next
+			p.Next = head2
+			head2 = head2.Next
 		}
+		p = p.Next
 	}
-
-	if l != nil {
-		cur.Next = l
+	if head1 != nil {
+		p.Next = head1
+	} else if head2 != nil {
+		p.Next = head2
 	}
-	if r != nil {
-		cur.Next = r
-	}
-
-	return head.Next
+	return dummyHead.Next
 }
 
+/***** 链表排序2 *****/
 func sortList2(head *ListNode) *ListNode {
 	if head == nil || head.Next == nil {
 		return head
 	}
-	mid := cutList(head)
-	l := sortList(head)
-	r := sortList(mid)
-	return mergeList3(l, r)
+	// 找中点
+	fast, slow := head.Next, head
+	for fast != nil && fast.Next != nil {
+		slow = slow.Next
+		fast = fast.Next.Next
+	}
+	head2 := slow.Next
+	slow.Next = nil
+	head1 := sortList(head)
+	head2 = sortList(head2)
+
+	return mergeList2(head1, head2)
 }
