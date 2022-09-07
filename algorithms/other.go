@@ -228,48 +228,6 @@ func maxProfit(prices []int) int {
 	return res
 }
 
-/***** 在排序数组中查找元素的第一个和最后一个位置 *****/
-// 给定一个按照升序排列的整数数组 nums，和一个目标值 target。
-// 找出给定目标值在数组中的开始位置和结束位置。
-// 如果数组中不存在目标值 target，返回 [-1, -1]。
-func searchRange(nums []int, target int) []int {
-	left, right := 0, len(nums)-1
-	var mid int
-	for left < right {
-		mid = left + (right-left)/2
-		if nums[mid] < target {
-			left = mid + 1 // 不加 1 可能死循环
-		} else if nums[mid] > target {
-			right = mid
-		} else {
-			break
-		}
-	}
-	/* 注意 */
-	mid = left + (right-left)/2
-	if len(nums) == 0 || mid < 0 || mid-1 > len(nums) || nums[mid] != target {
-		return []int{-1, -1}
-	}
-	/* --- */
-	res := []int{mid, mid}
-	for res[0] > 0 && nums[res[0]-1] == target {
-		res[0]--
-	}
-	for res[1] < len(nums)-1 && nums[res[1]+1] == target {
-		res[1]++
-	}
-	return res
-}
-
-func searchRange2(nums []int, target int) []int {
-	leftmost := sort.SearchInts(nums, target)
-	if leftmost == len(nums) || nums[leftmost] != target {
-		return []int{-1, -1}
-	}
-	rightmost := sort.SearchInts(nums, target+1) - 1
-	return []int{leftmost, rightmost}
-}
-
 /***** 有效的数独 *****/
 // 请你判断一个 9x9 的数独是否有效。
 // 数字 1-9 在每一行只能出现一次。
