@@ -45,6 +45,29 @@ func climbStairs(n int) int {
 	}
 }
 
+/***** 最长递增子序列 *****/
+func lengthOfLIS(nums []int) int {
+	if len(nums) == 0 {
+		return 0
+	}
+	dp := make([]int, len(nums))
+	result := 0
+	for i := 1; i < len(nums); i++ {
+		for j := 0; j < i; j++ {
+			if nums[j] >= nums[i] {
+				continue
+			}
+			dp[i] = max(dp[i], dp[j]+1)
+		}
+	}
+	for _, v := range dp {
+		if v > result {
+			result = v
+		}
+	}
+	return result + 1
+}
+
 /***** 编辑距离 *****/
 // 给你两个单词 word1 和 word2，请你计算出将 word1 转换成 word2 所使用的最少操作数。
 // 你可以对一个单词进行如下三种操作：

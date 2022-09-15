@@ -67,8 +67,3 @@ func gets() {
 	wg.Wait()
 	fmt.Println(results)
 }
-
-/***LRU Cache***/
-func lru() {
-
-}

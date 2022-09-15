@@ -1,5 +1,25 @@
 package algorithms
 
+/***** 航班预订统计 *****/
+// 核心思想：差分数组
+// 这里有 n 个航班，它们分别从 1 到 n 进行编号。
+// 有一份航班预订表 bookings ，表中第 i 条预订记录 bookings[i] = [firsti, lasti, seatsi]
+// 意味着在从 firsti 到 lasti （包含 firsti 和 lasti ）的 每个航班 上预订了 seatsi 个座位。
+// 请你返回一个长度为 n 的数组 answer，里面的元素是每个航班预定的座位总数。
+func corpFlightBookings(bookings [][]int, n int) []int {
+	nums := make([]int, n+1)
+	for _, book := range bookings {
+		nums[book[0]] += book[2]
+		if book[1] != n {
+			nums[book[1]+1] -= book[2]
+		}
+	}
+	for i := 2; i <= n; i++ {
+		nums[i] += nums[i-1]
+	}
+	return nums[1:]
+}
+
 type Dis struct {
 	left     int
 	right    int
