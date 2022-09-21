@@ -1,5 +1,33 @@
 package algorithms
 
+import "sort"
+
+/***** 在 D 天内送达包裹的能力 *****/
+// 返回能在 days 天内将传送带上的所有包裹送达的船的最低运载能力。
+func shipWithinDays(weights []int, days int) int {
+	// 确定二分查找左右边界
+	left, right := 0, 0
+	for _, w := range weights {
+		if w > left {
+			left = w
+		}
+		right += w
+	}
+	return left + sort.Search(right-left, func(x int) bool {
+		x += left
+		day := 1 // 需要运送的天数
+		sum := 0 // 当前这一天已经运送的包裹重量之和
+		for _, w := range weights {
+			if sum+w > x {
+				day++
+				sum = 0
+			}
+			sum += w
+		}
+		return day <= days
+	})
+}
+
 /***** 数组中的逆序对 *****/
 // 在数组中的两个数字，如果前面一个数字大于后面的数字，则这两个数字组成一个逆序对。
 // 输入一个数组，求出这个数组中的逆序对的总数。
