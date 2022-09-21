@@ -256,54 +256,6 @@ func rotateRight(head *ListNode, k int) *ListNode {
 	return ret
 }
 
-/***** 链表排序 *****/
-func sortList(head *ListNode) *ListNode {
-	if head == nil {
-		return head
-	}
-
-	length := 0
-	// 获取List长度
-	for node := head; node != nil; node = node.Next {
-		length++
-	}
-
-	dummyHead := &ListNode{Next: head}
-	// 遍历直到subLength增长到length
-	for subLength := 1; subLength < length; subLength <<= 1 {
-		// 重置为开头
-		prev, cur := dummyHead, dummyHead.Next
-		// 每次两小段合并，直到走完
-		for cur != nil {
-			head1 := cur
-			for i := 1; i < subLength && cur.Next != nil; i++ {
-				cur = cur.Next
-			}
-
-			head2 := cur.Next
-			cur.Next = nil
-			cur = head2
-			for i := 1; i < subLength && cur != nil && cur.Next != nil; i++ {
-				cur = cur.Next
-			}
-
-			var next *ListNode
-			if cur != nil {
-				next = cur.Next
-				cur.Next = nil
-			}
-			// 把刚刚拆下来的两小段重新装回去
-			prev.Next = mergeList2(head1, head2)
-
-			for prev.Next != nil {
-				prev = prev.Next
-			}
-			cur = next
-		}
-	}
-	return dummyHead.Next
-}
-
 func mergeList2(head1, head2 *ListNode) *ListNode {
 	dummyHead := &ListNode{}
 	p := dummyHead
@@ -326,7 +278,7 @@ func mergeList2(head1, head2 *ListNode) *ListNode {
 }
 
 /***** 链表排序2 *****/
-func sortList2(head *ListNode) *ListNode {
+func sortList(head *ListNode) *ListNode {
 	if head == nil || head.Next == nil {
 		return head
 	}
