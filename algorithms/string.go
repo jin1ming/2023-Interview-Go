@@ -3,7 +3,6 @@ package algorithms
 import (
 	"math"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -19,15 +18,15 @@ func clean(s string) (sign int, abs string) {
 		return
 	}
 	// 判断第一个字符
-	switch s[0] {
+	switch {
 	// 有效的
-	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+	case s[0] >= '0' && s[0] <= '9':
 		sign, abs = 1, s
 	// 有效的，正号
-	case '+':
+	case s[0] == '+':
 		sign, abs = 1, s[1:]
 	// 有效的，负号
-	case '-':
+	case s[0] == '-':
 		sign, abs = -1, s[1:]
 	// 无效的，当空字符处理，并且直接返回
 	default:
@@ -35,12 +34,8 @@ func clean(s string) (sign int, abs string) {
 		return
 	}
 	for i, b := range abs {
-		// 遍历第一波处理过的字符，如果直到第i个位置有效，那就取s[:i]，
-		// 从头到这个有效的字符，剩下的就不管了，也就是break掉
-		// 比如 s=123abc，那么就取123，也就是s[:3]
 		if b < '0' || '9' < b {
 			abs = abs[:i]
-			// 一定要break，因为后面的就没用了
 			break
 		}
 	}
@@ -91,75 +86,6 @@ func expandAroundCenter(s string, left, right int) (int, int) {
 	return left + 1, right - 1
 }
 
-/***** 反转每对括号间的子串 *****/
-func reverseParentheses(s string) string {
-	// 字符串无法直接修改，转换为byte slice
-	brr := []byte(s)
-	var stack []int
-	for i := 0; i < len(brr); i++ {
-		if brr[i] == '(' {
-			// 遇到左括号，加入栈中
-			stack = append(stack, i)
-		} else if brr[i] == ')' {
-			// 题目保证括号左右匹配，所以不用检验stack中是否有左括号
-			lastIdx := stack[len(stack)-1]
-			// 反转左括号位置+1到右括号位置-1之间的字符
-			for lj, rj := lastIdx+1, i-1; lj < rj; lj, rj = lj+1, rj-1 {
-				brr[lj], brr[rj] = brr[rj], brr[lj]
-			}
-			// 已匹配的左括号退栈
-			stack = stack[:len(stack)-1]
-		}
-	}
-
-	// 去掉所有括号字符
-	sb := strings.Builder{}
-	for i := 0; i < len(brr); i++ {
-		if brr[i] != '(' && brr[i] != ')' {
-			sb.WriteByte(brr[i])
-		}
-	}
-
-	return sb.String()
-}
-
-/***** 二叉树的右视图 *****/
-// 给定一个二叉树的 根节点 root，想象自己站在它的右侧，
-// 按照从顶部到底部的顺序，返回从右侧所能看到的节点值。
-func rightSideView(root *TreeNode) []int {
-	var res []int
-	if root == nil {
-		return res
-	}
-	var queue []*TreeNode
-	p := root
-	res = append(res, root.Val)
-	queue = append(queue, root)
-	for len(queue) > 0 {
-		qLen := len(queue)
-		right := math.MinInt32
-		// 保存每一层最右边的值
-		for i := 0; i < qLen; i++ {
-			p = queue[i]
-			if p.Left != nil {
-				queue = append(queue, p.Left)
-				right = p.Left.Val
-			}
-			if p.Right != nil {
-				queue = append(queue, p.Right)
-				right = p.Right.Val
-			}
-		}
-		if right != math.MinInt32 {
-			res = append(res, right)
-		}
-		newQueue := make([]*TreeNode, len(queue)-qLen)
-		copy(newQueue, queue[qLen:])
-		queue = newQueue
-	}
-	return res
-}
-
 /***** 字符串解码 *****/
 // 示例：
 // 输入：s = "3[a2[c]]"
@@ -168,50 +94,30 @@ func rightSideView(root *TreeNode) []int {
 // 如果当前的字符为字母或者左括号，直接进栈
 // 如果当前的字符为右括号，开始出栈，一直到左括号出栈
 func decodeString(s string) string {
-	var stack []string
-	ptr := 0
-	for ptr < len(s) {
-		cur := s[ptr]
-		if cur >= '0' && cur <= '9' {
-			digits := getDigits(s, &ptr)
-			stack = append(stack, digits)
-		} else if (cur >= 'a' && cur <= 'z' || cur >= 'A' && cur <= 'Z') || cur == '[' {
-			stack = append(stack, string(cur))
-			ptr++
-		} else {
-			ptr++
-			var sub []string
-			for stack[len(stack)-1] != "[" {
-				sub = append(sub, stack[len(stack)-1])
-				stack = stack[:len(stack)-1]
-			}
-			for i := 0; i < len(sub)/2; i++ {
-				sub[i], sub[len(sub)-i-1] = sub[len(sub)-i-1], sub[i]
-			}
-			stack = stack[:len(stack)-1]
-			repTime, _ := strconv.Atoi(stack[len(stack)-1])
-			stack = stack[:len(stack)-1]
-			t := strings.Repeat(getString(sub), repTime)
-			stack = append(stack, t)
+	var numStack []int    // 保存数组
+	var strStack []string // 保存字符串
+	num := 0
+	result := ""
+	for _, ch := range s {
+		switch {
+		case ch >= '0' && ch <= '9':
+			num = num*10 + int(ch-'0')
+		case ch == '[':
+			strStack = append(strStack, result)
+			result = ""
+			numStack = append(numStack, num)
+			num = 0
+		case ch == ']':
+			repeatCount := numStack[len(numStack)-1]
+			numStack = numStack[:len(numStack)-1]
+			str := strStack[len(strStack)-1]
+			strStack = strStack[:len(strStack)-1]
+			result = str + strings.Repeat(result, repeatCount)
+		default:
+			result += string(ch)
 		}
 	}
-	return getString(stack)
-}
-
-func getDigits(s string, ptr *int) string {
-	ret := ""
-	for ; s[*ptr] >= '0' && s[*ptr] <= '9'; *ptr++ {
-		ret += string(s[*ptr])
-	}
-	return ret
-}
-
-func getString(v []string) string {
-	ret := ""
-	for _, s := range v {
-		ret += s
-	}
-	return ret
+	return result
 }
 
 /***** 最多删除一个字符得到回文 *****/

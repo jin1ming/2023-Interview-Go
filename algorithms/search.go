@@ -1,5 +1,7 @@
 package algorithms
 
+import "sort"
+
 /***** 在排序数组中查找元素的第一个和最后一个位置 *****/
 // 给定一个按照升序排列的整数数组 nums，和一个目标值 target。
 // 找出给定目标值在数组中的开始位置和结束位置。
@@ -26,4 +28,15 @@ func search(nums []int, target int) int {
 		}
 	}
 	return ans
+}
+
+/***** 有效三角形的个数 *****/
+func triangleNumber(nums []int) (ans int) {
+	sort.Ints(nums)
+	for i, v := range nums {
+		for j := i + 1; j < len(nums); j++ {
+			ans += sort.SearchInts(nums[j+1:], v+nums[j])
+		}
+	}
+	return
 }

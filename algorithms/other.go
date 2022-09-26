@@ -45,37 +45,6 @@ func spiralOrder(matrix [][]int) []int {
 	return res
 }
 
-/***** 接雨水 *****/
-func trap(height []int) int {
-	maxHeight := 0
-	// 扫描最大高度
-	for _, k := range height {
-		if k > maxHeight {
-			maxHeight = k
-		}
-	}
-
-	capacity := 0
-
-	for k := 1; k <= maxHeight; k++ {
-		// 按行求雨水
-		pre := -1
-		for i := 0; i < len(height); i++ {
-			if height[i] < k {
-				continue
-			}
-			if pre == -1 {
-				pre = i
-			} else {
-				// += 后面是该行两道墙之间的空格数量
-				capacity += i - pre - 1
-				pre = i
-			}
-		}
-	}
-	return capacity
-}
-
 /***** 合并区间 *****/
 // 以数组 intervals 表示若干个区间的集合，其中单个区间为 intervals[i] = [starti, endi] 。
 // 请你合并所有重叠的区间，并返回一个不重叠的区间数组，该数组需恰好覆盖输入中的所有区间。

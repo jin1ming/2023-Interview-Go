@@ -157,7 +157,7 @@ func minPathSum(grid [][]int) int {
 }
 
 /***** 矩阵中最大的矩形 *****/
-func maximalRectangle0(matrix [][]byte) int {
+func maximalRectangle(matrix [][]byte) int {
 	row := len(matrix)
 	if row == 0 {
 		return 0
@@ -199,94 +199,6 @@ func maximalRectangle0(matrix [][]byte) int {
 			}
 		}
 	}
-	return res
-}
-
-//单调栈实现
-func maximalRectangle2(matrix [][]byte) int {
-	if matrix == nil || len(matrix) == 0 {
-		return 0
-	}
-	//保存最终结果
-	res := 0
-	//行数，列数
-	m, n := len(matrix), len(matrix[0])
-	//高度数组（统计每一行中1的高度）
-	height := make([]int, n)
-	for i := 0; i < m; i++ {
-		for j := 0; j < n; j++ {
-			//每一行去找1的高度
-			//如果不是‘1’，则将当前高度置为0
-			if matrix[i][j] == '0' {
-				height[j] = 0
-			} else {
-				//是‘1’，则将高度加1
-				height[j] = height[j] + 1
-			}
-		}
-		//更新最大矩形的面积
-		res = int(math.Max(float64(res), float64(largestRectangleArea2(height))))
-	}
-	return res
-}
-
-/***** 最长递增路径 *****/
-func longestIncreasingPath(matrix [][]int) int {
-	res := 1 // res最小为1
-	row := len(matrix)
-	col := len(matrix[0])
-
-	// dp数组，每个元素表示当前点开始所能构成的最长路径
-	bitmap := make([][]int, row)
-	for i := range matrix {
-		bitmap[i] = make([]int, col)
-	}
-
-	directions := [][]int{[]int{1, 0}, []int{0, 1}, []int{-1, 0}, []int{0, -1}}
-
-	isValid := func(r, c int) bool {
-		if r < 0 || r >= row || c < 0 || c >= col {
-			return false
-		}
-		return true
-	}
-
-	var dfs func(r, c, step int) int
-
-	dfs = func(r, c, step int) int {
-		// 判断该处是否走过
-		if bitmap[r][c] > 0 {
-			// 构成最大路径大于res进行更新
-			if bitmap[r][c] > res-step {
-				res = step + bitmap[r][c]
-			}
-			// 走过无需再走
-			return bitmap[r][c]
-		}
-
-		step += 1 // 该点默认能到达
-
-		if step > res {
-			res = step
-		}
-		newStep := 0 // 新走的最长路径
-		for _, d := range directions {
-			if isValid(r+d[0], c+d[1]) && matrix[r+d[0]][c+d[1]] > matrix[r][c] {
-				newStep = max(newStep, dfs(r+d[0], c+d[1], step))
-			}
-		}
-		newStep++ // 考虑当前点
-		bitmap[r][c] = newStep
-		return newStep
-	}
-
-	// 对所有点扫描一遍
-	for r := range matrix {
-		for c := range matrix[0] {
-			dfs(r, c, 0)
-		}
-	}
-
 	return res
 }
 
@@ -349,4 +261,50 @@ func maxSumDivThree(nums []int) int {
 		rest[c%3] = max(rest[c%3], c)
 	}
 	return rest[0]
+}
+
+/***** 交错字符串 *****/
+// 帮忙验证 s3 是否是由 s1 和 s2 交错 组成的。
+func isInterleave(s1 string, s2 string, s3 string) bool {
+	n, m, t := len(s1), len(s2), len(s3)
+	if (n + m) != t {
+		return false
+	}
+	f := make([][]bool, n+1)
+	for i := 0; i <= n; i++ {
+		f[i] = make([]bool, m+1)
+	}
+	f[0][0] = true
+	for i := 0; i <= n; i++ {
+		for j := 0; j <= m; j++ {
+			p := i + j - 1
+			if i > 0 {
+				f[i][j] = f[i][j] || (f[i-1][j] && s1[i-1] == s3[p])
+			}
+			if j > 0 {
+				f[i][j] = f[i][j] || (f[i][j-1] && s2[j-1] == s3[p])
+			}
+		}
+	}
+	return f[n][m]
+}
+
+/***** 交错字符串 *****/
+func rob(nums []int) int {
+	n := len(nums)
+	if n == 1 {
+		return nums[0]
+	}
+	if n == 2 {
+		return max(nums[0], nums[1])
+	}
+	return max(_rob(nums[:n-1]), _rob(nums[1:]))
+}
+
+func _rob(nums []int) int {
+	first, second := nums[0], max(nums[0], nums[1])
+	for _, v := range nums[2:] {
+		first, second = second, max(first+v, second)
+	}
+	return second
 }

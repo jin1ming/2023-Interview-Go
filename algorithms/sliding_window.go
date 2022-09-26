@@ -11,18 +11,18 @@ func lengthOfLongestSubstring(s string) int {
 		return 0
 	}
 	res, left := 0, 0
-	bitmap := make(map[byte]int)
+	M := make(map[byte]int)
 
 	for right := 0; right < len(s); right++ {
 		// 这里查的是和s[right]相同的字符，上一次出现的位置
-		if pos, ok := bitmap[s[right]]; ok {
+		if pos, ok := M[s[right]]; ok {
 			for left <= pos {
 				// left 将自增，直到 c+1 的位置
-				delete(bitmap, s[left])
+				delete(M, s[left])
 				left++
 			}
 		}
-		bitmap[s[right]] = right
+		M[s[right]] = right
 		// 记录走过的位置
 		if right-left > res {
 			res = right - left
