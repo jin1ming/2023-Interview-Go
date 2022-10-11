@@ -431,3 +431,7 @@ func leastInterval(tasks []byte, n int) int {
 	}
 	return max(len(tasks), cnt+(n+1)*(table[0]-1))
 }
+
+func candy(ratings []int) int {
+
+}
