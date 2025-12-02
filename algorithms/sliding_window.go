@@ -150,35 +150,51 @@ func numSubarrayProductLessThanK(nums []int, k int) int {
 
 /***** 找到字符串中所有字母异位词 *****/
 // 典型滑动窗口
+// 给定字符串 s 和 p，找到 s 中所有 p 的异位词的子串，返回这些子串的起始索引
+// 例如: s = "cbaebabacd", p = "abc" -> [0,6]
 func findAnagrams(s string, p string) []int {
 	pl := len(p)
 	sl := len(s)
+	// 边界条件: 如果 p 比 s 长，不可能存在异位词
 	if pl > sl {
 		return nil
 	}
 	var result []int
 
+	// 使用 map 记录字符频率差异
+	// 正数表示 p 中该字符比当前窗口多，负数表示窗口中该字符比 p 多
 	m := make(map[byte]int)
+	// 统计 p 中每个字符的出现次数
 	for i := 0; i < pl; i++ {
 		m[p[i]]++
 	}
 
+	// 初始化第一个窗口: 将 s 的前 pl 个字符的频率从 m 中减去
+	// 如果某个字符在窗口中出现，就减少其计数
 	for i1 := 0; i1 < pl; i1++ {
 		m[s[i1]]--
 	}
 
 out:
+	// 滑动窗口遍历所有可能的起始位置
 	for i := 0; i < sl-pl+1; i++ {
+		// 从第二个窗口开始，需要移动窗口
 		if i > 0 {
+			// 左边界右移: 移除窗口左侧的字符 s[i-1]，恢复其计数
 			m[s[i-1]]++
+			// 右边界右移: 加入窗口右侧的新字符 s[i+pl-1]，减少其计数
 			m[s[i+pl-1]]--
 		}
 
+		// 检查当前窗口是否是异位词
+		// 如果所有字符的频率差都为 0，说明窗口中的字符频率与 p 完全匹配
 		for _, v := range m {
 			if v != 0 {
+				// 有字符频率不匹配，跳到外层循环的下一次迭代
 				continue out
 			}
 		}
+		// 当前窗口是异位词，记录起始索引
 		result = append(result, i)
 	}
 	return result
