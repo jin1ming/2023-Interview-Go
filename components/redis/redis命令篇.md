@@ -36,6 +36,40 @@
 
 - 获取指定master节点的所有slaves：`sentinel slaves <master name>`
 
+- 获取指定master节点的sentinels：`sentinel sentinels <master name>`
+
+## ACL 权限控制 (Redis 6.0+)
+
+Redis 6.0 引入了 ACL (Access Control List) 机制，替代了旧的单一密码模式。
+
+- 登录（用户名/密码）：`AUTH <username> <password>` (旧版仅密码：`AUTH <password>`)
+- 查看当前用户：`ACL WHOAMI`
+- 列出所有用户：`ACL LIST`
+- 创建/修改用户：`ACL SETUSER <username> [rule ...]`
+  - 示例：`ACL SETUSER alice on >p1pp0 ~cached:* +get` (启用用户alice，密码p1pp0，允许访问cached:开头的key，仅允许执行get命令)
+
+## Hash 字段级过期 (Redis 7.4+)
+
+Redis 7.4 支持为 Hash 结构中的单个 Field 设置过期时间。
+
+- 设置字段过期（秒）：`HEXPIRE key seconds [NX|XX|GT|LT] FIELDS numfields field [field ...]`
+  - 示例：`HEXPIRE user:1001 3600 FIELDS 1 token` (让 token 字段 1小时后过期)
+- 设置字段过期（毫秒）：`HPEXPIRE key milliseconds ...`
+- 查看字段剩余生存时间：`HTTL key FIELDS numfields field [field ...]`
+- 移除字段过期时间：`HPERSIST key FIELDS numfields field [field ...]`
+
+## 故障诊断与运维
+
+- 内存诊断：
+  - 查看 Key 内存占用：`MEMORY USAGE <key>`
+  - 内存报告与建议：`MEMORY DOCTOR`
+  - 内存统计详情：`MEMORY STATS`
+
+- 延迟诊断：
+  - 延迟报告与建议：`LATENCY DOCTOR`
+  - 查看延迟事件：`LATENCY LATEST`
+
+
 - 获取管理指定master节点的sentinels：`sentinel sentinels <master name>`
 
 - 对指定master节点进行强制故障转移：`sentinel failover <master name>`
